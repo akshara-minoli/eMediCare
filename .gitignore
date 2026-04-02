@@ -1,0 +1,124 @@
+# ========================
+# Node.js
+# ========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+
+# ========================
+# Environment Variables
+# ========================
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+*.env
+
+# ========================
+# Build & Distribution
+# ========================
+dist/
+build/
+out/
+.next/
+.nuxt/
+.vite/
+*.tsbuildinfo
+
+# ========================
+# Logs
+# ========================
+logs/
+*.log
+*.log.*
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ========================
+# OS Files
+# ========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+
+# ========================
+# IDE & Editor Files
+# ========================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+
+# ========================
+# Docker
+# ========================
+.dockerignore
+docker-compose.override.yml
+
+# ========================
+# Coverage & Testing
+# ========================
+coverage/
+.nyc_output/
+*.lcov
+junit.xml
+
+# ========================
+# Temporary Files
+# ========================
+tmp/
+temp/
+.cache/
+.parcel-cache/
+.eslintcache
+
+# ========================
+# Secrets & Keys
+# ========================
+*.pem
+*.key
+*.p12
+*.cert
+*.crt
+secrets/
+
+# ========================
+# MongoDB
+# ========================
+data/db/
+mongodata/
