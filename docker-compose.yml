@@ -34,6 +34,7 @@ services:
       - DOCTOR_SERVICE_URL=http://doctor-service:5006
       - PATIENT_SERVICE_URL=http://patient-service:5007
       - TELEMEDICINE_SERVICE_URL=http://telemedicine-service:5008
+      - ADMIN_SERVICE_URL=http://admin-service:5009
     depends_on:
       - auth-service
       - appointment-service
@@ -43,6 +44,7 @@ services:
       - doctor-service
       - patient-service
       - telemedicine-service
+      - admin-service
     networks:
       - emedicare-network
 
@@ -172,6 +174,23 @@ services:
     environment:
       - PORT=5008
       - MONGO_URI=mongodb://mongo:27017/emedicare_telemedicine
+    depends_on:
+      - mongo
+    networks:
+      - emedicare-network
+
+  # ──────────────────────────
+  # Admin Service  :5009
+  # ──────────────────────────
+  admin-service:
+    build:
+      context: ./services/admin-service
+      dockerfile: ../../docker/services.Dockerfile
+    ports:
+      - "5009:5009"
+    environment:
+      - PORT=5009
+      - MONGO_URI=mongodb://mongo:27017/emedicare_admin
     depends_on:
       - mongo
     networks:

@@ -29,6 +29,7 @@ const services = {
   '/api/doctors':        process.env.DOCTOR_SERVICE_URL        || 'http://localhost:5006',
   '/api/patients':       process.env.PATIENT_SERVICE_URL       || 'http://localhost:5007',
   '/api/telemedicine':   process.env.TELEMEDICINE_SERVICE_URL  || 'http://localhost:5008',
+  '/api/admin':          process.env.ADMIN_SERVICE_URL         || 'http://localhost:5009',
 };
 
 Object.entries(services).forEach(([route, target]) => {

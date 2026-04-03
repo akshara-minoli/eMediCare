@@ -39,6 +39,8 @@ spec:
               value: "http://patient-service:5007"
             - name: TELEMEDICINE_SERVICE_URL
               value: "http://telemedicine-service:5008"
+            - name: ADMIN_SERVICE_URL
+              value: "http://admin-service:5009"
           resources:
             requests:
               memory: "128Mi"

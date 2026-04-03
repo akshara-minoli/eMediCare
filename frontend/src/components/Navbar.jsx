@@ -18,6 +18,7 @@ export default function Navbar() {
     { to: '/appointments',    label: 'Appointments' },
     { to: '/telemedicine',    label: 'Video Consult' },
     { to: '/symptom-checker', label: 'AI Checker' },
+    { to: '/admin',           label: 'Admin' },
   ];
 
   return (

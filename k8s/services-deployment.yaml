@@ -356,3 +356,48 @@ spec:
     - port: 5008
       targetPort: 5008
   type: ClusterIP
+---
+# ──────────────────────────────────────────────────────────────
+# Admin Service  (port 5009)
+# ──────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-service
+  labels:
+    app: admin-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-service
+  template:
+    metadata:
+      labels:
+        app: admin-service
+    spec:
+      containers:
+        - name: admin-service
+          image: emedicare/admin-service:latest
+          ports:
+            - containerPort: 5009
+          env:
+            - name: PORT
+              value: "5009"
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: emedicare-secrets
+                  key: MONGO_URI_ADMIN
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-service
+spec:
+  selector:
+    app: admin-service
+  ports:
+    - port: 5009
+      targetPort: 5009
+  type: ClusterIP
