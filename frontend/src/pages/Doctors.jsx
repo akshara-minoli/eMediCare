@@ -9,19 +9,19 @@ const SPECIALTIES = [
 
 // Placeholder doctors for initial UI (replace with live API data)
 const PLACEHOLDER_DOCTORS = [
-  { _id: '1', name: 'Dr. Sarah Johnson',  specialty: 'Cardiologist',      experience: 12, consultationFee: 80,  rating: 4.9, isAvailable: true },
-  { _id: '2', name: 'Dr. Ravi Kumar',     specialty: 'Neurologist',       experience: 9,  consultationFee: 70,  rating: 4.7, isAvailable: true },
-  { _id: '3', name: 'Dr. Aisha Patel',    specialty: 'Dermatologist',     experience: 6,  consultationFee: 55,  rating: 4.8, isAvailable: false },
-  { _id: '4', name: 'Dr. Emily Chen',     specialty: 'Pediatrician',      experience: 15, consultationFee: 65,  rating: 4.9, isAvailable: true },
-  { _id: '5', name: 'Dr. Michael Brown',  specialty: 'General Physician', experience: 8,  consultationFee: 40,  rating: 4.6, isAvailable: true },
-  { _id: '6', name: 'Dr. Priya Sharma',   specialty: 'Gynecologist',      experience: 11, consultationFee: 75,  rating: 4.8, isAvailable: true },
+  { _id: '1', name: 'Dr. Sarah Johnson', specialty: 'Cardiologist', experience: 12, consultationFee: 80, rating: 4.9, isAvailable: true },
+  { _id: '2', name: 'Dr. Ravi Kumar', specialty: 'Neurologist', experience: 9, consultationFee: 70, rating: 4.7, isAvailable: true },
+  { _id: '3', name: 'Dr. Aisha Patel', specialty: 'Dermatologist', experience: 6, consultationFee: 55, rating: 4.8, isAvailable: false },
+  { _id: '4', name: 'Dr. Emily Chen', specialty: 'Pediatrician', experience: 15, consultationFee: 65, rating: 4.9, isAvailable: true },
+  { _id: '5', name: 'Dr. Michael Brown', specialty: 'General Physician', experience: 8, consultationFee: 40, rating: 4.6, isAvailable: true },
+  { _id: '6', name: 'Dr. Priya Sharma', specialty: 'Gynecologist', experience: 11, consultationFee: 75, rating: 4.8, isAvailable: true },
 ];
 
 export default function Doctors() {
-  const [doctors, setDoctors]       = useState(PLACEHOLDER_DOCTORS);
-  const [specialty, setSpecialty]   = useState('All');
-  const [search, setSearch]         = useState('');
-  const [loading, setLoading]       = useState(false);
+  const [doctors, setDoctors] = useState(PLACEHOLDER_DOCTORS);
+  const [specialty, setSpecialty] = useState('All');
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -29,7 +29,7 @@ export default function Doctors() {
       try {
         const params = {};
         if (specialty !== 'All') params.specialty = specialty;
-        if (search)              params.search     = search;
+        if (search) params.search = search;
         const { data } = await axios.get('/api/doctors', { params });
         if (data.doctors?.length) setDoctors(data.doctors);
       } catch {
@@ -93,7 +93,11 @@ export default function Doctors() {
                   <span className="text-sm text-white/60">
                     ⭐ {doc.rating} &nbsp;·&nbsp; <span className="text-white font-semibold">${doc.consultationFee}</span>
                   </span>
-                  <button className="btn-primary text-xs px-4 py-1.5" disabled={!doc.isAvailable}>
+                  <button
+                    className="btn-primary text-xs px-4 py-1.5"
+                    disabled={!doc.isAvailable}
+                    onClick={() => window.location.href = `/appointments/book?doctorId=${doc._id}&specialty=${doc.specialty}`}
+                  >
                     Book
                   </button>
                 </div>

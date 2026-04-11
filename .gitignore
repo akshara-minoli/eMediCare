@@ -122,3 +122,4 @@ secrets/
 # ========================
 data/db/
 mongodata/
+services/appointment-service/.env.example
