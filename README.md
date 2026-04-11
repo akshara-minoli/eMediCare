@@ -286,6 +286,11 @@ Access the app at: **http://localhost:3000**
 | POST | `/api/appointments/book` | Appointment Service | Book a new appointment |
 | POST | `/api/payments/pay` | Payment Service | Process a payment |
 | POST | `/api/ai/symptom-check` | AI Service | Check symptoms via AI |
+| GET    | `/api/doctors`           | Doctor Service       | Get a list of verified doctors |
+| GET    | `/api/patients/:id`      | Patient Service      | Retrieve patient profile details |
+| POST   | `/api/telemedicine/room` | Telemedicine Service | Initialize a secure WebRTC room |
+| GET    | `/api/admin/metrics`     | Admin Service        | Fetch platform operations metrics |
+| POST   | `/api/notifications/say` | Notification Service | Trigger SMS/Email notifications |
 
 ---
 
