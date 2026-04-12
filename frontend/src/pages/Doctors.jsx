@@ -93,9 +93,13 @@ export default function Doctors() {
                   <span className="text-sm text-white/60">
                     ⭐ {doc.rating} &nbsp;·&nbsp; <span className="text-white font-semibold">${doc.consultationFee}</span>
                   </span>
-                  <button className="btn-primary text-xs px-4 py-1.5" disabled={!doc.isAvailable}>
-                    Book
-                  </button>
+                  <button
+  className="btn-primary text-xs px-4 py-1.5"
+  disabled={!doc.isAvailable}
+  onClick={() => window.location.href = `/appointments/book?doctorId=${doc._id}&specialty=${doc.specialty}`}
+>
+  Book
+</button>
                 </div>
               </div>
             ))}
