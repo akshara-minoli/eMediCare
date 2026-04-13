@@ -76,6 +76,43 @@ export default function DoctorDashboard() {
     [patients]
   );
 
+  const ownPatientIds = useMemo(() => {
+    const ids = new Set();
+    appointments.forEach((item) => {
+      if (item.patientId) ids.add(String(item.patientId));
+    });
+    prescriptions.forEach((item) => {
+      if (item.patientId) ids.add(String(item.patientId));
+    });
+    return ids;
+  }, [appointments, prescriptions]);
+
+  const ownPatients = useMemo(
+    () => patients.filter((patient) => ownPatientIds.has(String(patient.userId || patient._id))),
+    [patients, ownPatientIds]
+  );
+
+  const appointmentPatientIds = useMemo(() => {
+    const ids = new Set();
+    appointments.forEach((item) => {
+      if (item.patientId) ids.add(String(item.patientId));
+    });
+    return ids;
+  }, [appointments]);
+
+  const reportPatients = useMemo(
+    () => patients.filter((patient) => appointmentPatientIds.has(String(patient.userId || patient._id))),
+    [patients, appointmentPatientIds]
+  );
+
+  useEffect(() => {
+    if (!reportPatientId) return;
+    if (!reportPatients.some((patient) => String(patient.userId || patient._id) === String(reportPatientId))) {
+      setReportPatientId(reportPatients[0]?.userId || '');
+      setPatientReport(null);
+    }
+  }, [reportPatients, reportPatientId]);
+
   const relatedPatientCount = useMemo(() => {
     const patientIds = new Set();
     appointments.forEach((item) => {
@@ -123,17 +160,42 @@ export default function DoctorDashboard() {
 
   const totalAppointmentsCount = appointments.length;
 
+  const getDateKey = (value) => {
+    if (!value) return null;
+
+    if (typeof value === 'string') {
+      const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
+      if (match) return match[1];
+    }
+
+    const parsedDate = new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) return null;
+
+    const year = parsedDate.getFullYear();
+    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(parsedDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const currentDoctorIds = useMemo(
+    () => Array.from(new Set([profile?._id, profile?.userId].filter(Boolean).map(String))),
+    [profile]
+  );
+
   const todayAppointmentsCount = useMemo(() => {
-    const today = new Date();
+    const todayKey = getDateKey(new Date());
     return appointments.filter((item) => {
-      const appointmentDate = new Date(item.date);
+      const appointmentDoctorId = String(item.doctorId || '');
+      const confirmedByDoctorId = String(item.confirmedByDoctorId || '');
+      const confirmedByDoctorUserId = String(item.confirmedByDoctorUserId || '');
       return (
-        appointmentDate.getFullYear() === today.getFullYear() &&
-        appointmentDate.getMonth() === today.getMonth() &&
-        appointmentDate.getDate() === today.getDate()
+        item.status === 'confirmed' &&
+        currentDoctorIds.includes(appointmentDoctorId) &&
+        (currentDoctorIds.includes(confirmedByDoctorId) || currentDoctorIds.includes(confirmedByDoctorUserId)) &&
+        getDateKey(item.date) === todayKey
       );
     }).length;
-  }, [appointments]);
+  }, [appointments, currentDoctorIds]);
 
   const runBusy = async (fn) => {
     setBusy(true);
@@ -761,7 +823,7 @@ export default function DoctorDashboard() {
                 required
               >
                 <option value="">Select patient name</option>
-                {patients.map((patient) => (
+                {ownPatients.map((patient) => (
                   <option key={patient.userId} value={patient.userId}>
                     {patient.name} {patient.email ? `(${patient.email})` : ''}
                   </option>
@@ -781,7 +843,7 @@ export default function DoctorDashboard() {
             <div className="flex gap-2 flex-col md:flex-row">
               <select className="form-input" value={reportPatientId} onChange={(e) => setReportPatientId(e.target.value)}>
                 <option value="">Select patient name</option>
-                {patients.map((patient) => (
+                {reportPatients.map((patient) => (
                   <option key={patient.userId} value={patient.userId}>
                     {patient.name} {patient.email ? `(${patient.email})` : ''}
                   </option>
