@@ -115,6 +115,8 @@ router.put('/me', doctorAuth, async (req, res) => {
       name: req.body.name,
       specialty: req.body.specialty,
       phone: req.body.phone,
+      experience: req.body.experience,
+      consultationFee: req.body.consultationFee,
     };
     const currentDoctor = (await resolveDoctorFromToken(req)) || (await createDoctorProfileFromAuth(req));
     if (!currentDoctor) return res.status(404).json({ message: 'Doctor profile not found' });
@@ -332,7 +334,8 @@ router.get('/prescriptions', doctorAuth, async (req, res) => {
     const doctor = (await resolveDoctorFromToken(req)) || (await createDoctorProfileFromAuth(req));
     if (!doctor) return res.status(404).json({ message: 'Doctor profile not found' });
 
-    const filter = { doctorId: doctor._id };
+    const doctorIds = Array.from(new Set([doctor._id?.toString(), doctor.userId?.toString()].filter(Boolean)));
+    const filter = { doctorId: { $in: doctorIds } };
     if (req.query.patientId) filter.patientId = req.query.patientId;
     const prescriptions = await Prescription.find(filter).sort({ createdAt: -1 });
 

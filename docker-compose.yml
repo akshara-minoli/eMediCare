@@ -55,11 +55,12 @@ services:
     build:
       context: ./services/auth-service
       dockerfile: ../../docker/services.Dockerfile
+    env_file:
+      - ./services/auth-service/.env
     ports:
       - "5001:5001"
     environment:
       - PORT=5001
-      - MONGO_URI=mongodb://mongo:27017/emedicare_auth
       - JWT_SECRET=change_this_secret_in_production
       - FRONTEND_URL=http://localhost:5173
     depends_on:
@@ -74,11 +75,12 @@ services:
     build:
       context: ./services/appointment-service
       dockerfile: ../../docker/services.Dockerfile
+    env_file:
+      - ./services/appointment-service/.env
     ports:
       - "5002:5002"
     environment:
       - PORT=5002
-      - MONGO_URI=mongodb://mongo:27017/emedicare_appointments
     depends_on:
       - mongo
     networks:
@@ -91,11 +93,12 @@ services:
     build:
       context: ./services/payment-service
       dockerfile: ../../docker/services.Dockerfile
+    env_file:
+      - ./services/payment-service/.env
     ports:
       - "5003:5003"
     environment:
       - PORT=5003
-      - MONGO_URI=mongodb://mongo:27017/emedicare_payments
     depends_on:
       - mongo
     networks:
@@ -136,11 +139,12 @@ services:
     build:
       context: ./services/doctor-service
       dockerfile: ../../docker/services.Dockerfile
+    env_file:
+      - ./services/doctor-service/.env
     ports:
       - "5006:5006"
     environment:
       - PORT=5006
-      - MONGO_URI=mongodb://mongo:27017/emedicare_doctors
       - JWT_SECRET=change_this_secret_in_production
       - AUTH_SERVICE_URL=http://auth-service:5001/api/auth
       - APPOINTMENT_SERVICE_URL=http://appointment-service:5002/api/appointments
@@ -158,11 +162,12 @@ services:
     build:
       context: ./services/patient-service
       dockerfile: ../../docker/services.Dockerfile
+    env_file:
+      - ./services/patient-service/.env
     ports:
       - "5007:5007"
     environment:
       - PORT=5007
-      - MONGO_URI=mongodb://mongo:27017/emedicare_patients
     depends_on:
       - mongo
     networks:
@@ -192,11 +197,12 @@ services:
     build:
       context: ./services/admin-service
       dockerfile: ../../docker/services.Dockerfile
+    env_file:
+      - ./services/admin-service/.env
     ports:
       - "5009:5009"
     environment:
       - PORT=5009
-      - MONGO_URI=mongodb://mongo:27017/emedicare_admin
       - JWT_SECRET=change_this_secret_in_production
       - AUTH_SERVICE_URL=http://auth-service:5001/api/auth
       - DOCTOR_SERVICE_URL=http://doctor-service:5006/api/doctors

@@ -15,18 +15,42 @@ export default function Telemedicine() {
   const [error, setError]       = useState('');
 
   const user = JSON.parse(localStorage.getItem('emedicare_user') || 'null');
+  const token = localStorage.getItem('emedicare_token');
 
   useEffect(() => {
     if (!user) return;
     const fetchSessions = async () => {
       setLoading(true);
       try {
-        const key = user.role === 'doctor' ? 'doctorId' : 'patientId';
-        const { data } = await axios.get('/api/telemedicine/sessions', {
-          params: { [key]: user.id },
-          headers: { Authorization: `Bearer ${localStorage.getItem('emedicare_token')}` },
-        });
-        setSessions(data.sessions || []);
+        const headers = { Authorization: `Bearer ${token}` };
+
+        if (user.role === 'doctor') {
+          const doctorProfileRes = await axios.get('/api/doctors/me', { headers });
+          const doctor = doctorProfileRes.data?.doctor || null;
+          const ids = Array.from(new Set([doctor?._id, doctor?.userId, user.id].filter(Boolean)));
+
+          const sessionResponses = await Promise.all(
+            ids.map((doctorId) => axios.get('/api/telemedicine/sessions', {
+              params: { doctorId },
+              headers,
+            }))
+          );
+
+          const mergedSessions = new Map();
+          sessionResponses.forEach((response) => {
+            (response.data?.sessions || []).forEach((session) => {
+              mergedSessions.set(session._id, session);
+            });
+          });
+
+          setSessions(Array.from(mergedSessions.values()));
+        } else {
+          const { data } = await axios.get('/api/telemedicine/sessions', {
+            params: { patientId: user.id },
+            headers,
+          });
+          setSessions(data.sessions || []);
+        }
       } catch {
         setError('Could not load sessions.');
       } finally {
