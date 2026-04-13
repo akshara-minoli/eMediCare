@@ -122,3 +122,8 @@ secrets/
 # ========================
 data/db/
 mongodata/
+
+# ========================
+# Runtime Uploads
+# ========================
+services/patient-service/uploads/

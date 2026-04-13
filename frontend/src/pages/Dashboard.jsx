@@ -1,15 +1,66 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { getPatientReports, uploadPatientReport } from '../services/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [reportFile, setReportFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [reportMessage, setReportMessage] = useState('');
+  const [reports, setReports] = useState([]);
 
   useEffect(() => {
     const stored = localStorage.getItem('emedicare_user');
     if (!stored) { navigate('/login'); return; }
     setUser(JSON.parse(stored));
   }, [navigate]);
+
+  useEffect(() => {
+    const loadReports = async () => {
+      if (!user?.id || user.role !== 'patient') return;
+      try {
+        const response = await getPatientReports(user.id);
+        setReports(response.data?.reports || []);
+      } catch {
+        setReports([]);
+      }
+    };
+
+    loadReports();
+  }, [user]);
+
+  const handleReportUpload = async (e) => {
+    e.preventDefault();
+    setReportMessage('');
+
+    if (!user?.id || user.role !== 'patient') return;
+    if (!reportFile) {
+      setReportMessage('Please choose a PDF file first.');
+      return;
+    }
+
+    if (reportFile.type !== 'application/pdf') {
+      setReportMessage('Only PDF files are allowed.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('report', reportFile);
+
+    setUploading(true);
+    try {
+      await uploadPatientReport(user.id, formData);
+      setReportMessage('Report uploaded successfully.');
+      setReportFile(null);
+      const response = await getPatientReports(user.id);
+      setReports(response.data?.reports || []);
+    } catch (err) {
+      setReportMessage(err.response?.data?.message || 'Failed to upload report.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   if (!user) return null;
 
@@ -61,6 +112,40 @@ export default function Dashboard() {
             <Link to="/appointments" className="btn-primary text-sm px-5 py-2">View Appointments</Link>
           </div>
         </div>
+
+        {user.role === 'patient' && (
+          <section className="card mt-6 space-y-4">
+            <h2 className="font-heading font-semibold text-lg">Upload Medical Report (PDF)</h2>
+            <form onSubmit={handleReportUpload} className="flex flex-col md:flex-row gap-3 md:items-center">
+              <input
+                type="file"
+                accept="application/pdf"
+                className="form-input"
+                onChange={(e) => setReportFile(e.target.files?.[0] || null)}
+              />
+              <button type="submit" className="btn-primary" disabled={uploading}>
+                {uploading ? 'Uploading...' : 'Upload Report'}
+              </button>
+            </form>
+            {reportMessage && <p className="text-sm text-white/70">{reportMessage}</p>}
+
+            <div className="space-y-2">
+              {reports.length === 0 && <p className="text-sm text-white/50">No uploaded reports yet.</p>}
+              {reports.map((report) => (
+                <a
+                  key={`${report.fileName}-${report.uploadedAt}`}
+                  href={report.fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block border border-white/10 rounded-xl px-3 py-2 text-sm hover:border-primary/40"
+                >
+                  <p className="text-white">{report.originalName}</p>
+                  <p className="text-white/50 text-xs">Uploaded: {new Date(report.uploadedAt).toLocaleString()}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );

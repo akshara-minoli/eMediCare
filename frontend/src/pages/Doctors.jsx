@@ -1,5 +1,26 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
+
+function formatSlot24Hour(slot) {
+  const value = (slot || '').trim();
+  const match = value.match(/^(\d{1,2})(?::(\d{1,2}))?\s*-\s*(\d{1,2})(?::(\d{1,2}))?$/);
+  if (!match) return value;
+
+  const startHour = Number(match[1]);
+  const startMinute = Number(match[2] || 0);
+  const endHour = Number(match[3]);
+  const endMinute = Number(match[4] || 0);
+  const valid =
+    startHour >= 0 && startHour <= 23 &&
+    endHour >= 0 && endHour <= 23 &&
+    startMinute >= 0 && startMinute <= 59 &&
+    endMinute >= 0 && endMinute <= 59;
+
+  if (!valid) return value;
+  const pad = (num) => String(num).padStart(2, '0');
+  return `${pad(startHour)}:${pad(startMinute)}-${pad(endHour)}:${pad(endMinute)}`;
+}
 
 const SPECIALTIES = [
   'All', 'General Physician', 'Cardiologist', 'Dermatologist',
@@ -22,6 +43,7 @@ export default function Doctors() {
   const [specialty, setSpecialty]   = useState('All');
   const [search, setSearch]         = useState('');
   const [loading, setLoading]       = useState(false);
+  const [availabilityByDoctor, setAvailabilityByDoctor] = useState({});
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -41,12 +63,37 @@ export default function Doctors() {
     fetchDoctors();
   }, [specialty, search]);
 
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!doctors.length) {
+        setAvailabilityByDoctor({});
+        return;
+      }
+
+      const entries = await Promise.all(
+        doctors.map(async (doc) => {
+          try {
+            const { data } = await axios.get(`/api/doctors/availability/${doc._id}`);
+            return [doc._id, data?.availability || []];
+          } catch {
+            return [doc._id, []];
+          }
+        })
+      );
+
+      setAvailabilityByDoctor(Object.fromEntries(entries));
+    };
+
+    fetchAvailability();
+  }, [doctors]);
+
   return (
     <main className="min-h-screen bg-bg">
       <div className="max-w-6xl mx-auto px-6 py-12">
 
         {/* Header */}
         <div className="mb-10">
+          <Link to="/" className="btn-outline text-sm mb-4 inline-flex">Back to Home</Link>
           <div className="section-tag mb-3">Find a Doctor</div>
           <h1 className="text-3xl font-heading font-bold mb-2">Browse Verified Doctors</h1>
           <p className="text-white/50 text-sm">Filter by specialty and book your appointment instantly.</p>
@@ -88,6 +135,17 @@ export default function Doctors() {
                   <span className={`badge ${doc.isAvailable ? 'badge-green' : 'badge-red'}`}>
                     {doc.isAvailable ? '● Available' : '● Unavailable'}
                   </span>
+                </div>
+                <div className="text-xs text-white/60 border border-white/[0.08] rounded-xl p-3 bg-white/[0.02]">
+                  <p className="text-white/70 font-medium mb-1">Availability Schedule</p>
+                  {(availabilityByDoctor[doc._id] || []).length === 0 && (
+                    <p className="text-white/45">No schedule added yet.</p>
+                  )}
+                  {(availabilityByDoctor[doc._id] || []).map((slot) => (
+                    <p key={slot._id}>
+                      {new Date(slot.date).toLocaleDateString()} : {(slot.timeSlots || []).map((timeSlot) => formatSlot24Hour(timeSlot)).join(', ')}
+                    </p>
+                  ))}
                 </div>
                 <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/[0.06]">
                   <span className="text-sm text-white/60">

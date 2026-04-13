@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/user.model');
 
 function requireAdmin(req, res, next) {
@@ -128,6 +129,74 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error('[Auth] Login error:', err.message);
     res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// ── POST /api/auth/forgot-password ───────────────────────────
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const normalizedEmail = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    if (!normalizedEmail) return res.status(400).json({ message: 'Email is required' });
+
+    const user = await User.findOne({ email: normalizedEmail }).select('+resetPasswordToken +resetPasswordExpires');
+    if (!user) {
+      return res.json({ message: 'If an account exists for that email, a reset link has been generated.' });
+    }
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = new Date(Date.now() + 1000 * 60 * 30);
+    await user.save();
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
+
+    console.info(`[Auth] Password reset link generated for ${normalizedEmail}: ${resetUrl}`);
+
+    if ((process.env.NODE_ENV || '').toLowerCase() !== 'production') {
+      return res.json({
+        message: 'Password reset link generated.',
+        resetUrl,
+      });
+    }
+
+    return res.json({ message: 'If an account exists for that email, a reset link has been generated.' });
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// ── POST /api/auth/reset-password ────────────────────────────
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return res.status(400).json({ message: 'token and password are required' });
+    }
+
+    if (String(password).length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+
+    const hashedToken = crypto.createHash('sha256').update(String(token)).digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: new Date() },
+    }).select('+resetPasswordToken +resetPasswordExpires');
+
+    if (!user) return res.status(400).json({ message: 'Invalid or expired reset token' });
+
+    user.password = await bcrypt.hash(password, 12);
+    user.resetPasswordToken = '';
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    return res.json({ message: 'Password reset successful. Please login with your new password.' });
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 

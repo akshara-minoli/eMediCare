@@ -19,12 +19,32 @@ export const getDoctors = (params) => API.get('/doctors', { params });
 export const getDoctorById = (id) => API.get(`/doctors/${id}`);
 export const createDoctor = (data) => API.post('/doctors', data);
 export const updateDoctor = (id, d) => API.put(`/doctors/${id}`, d);
+export const getMyDoctorProfile = () => API.get('/doctors/me');
+export const updateMyDoctorProfile = (data) => API.put('/doctors/me', data);
+export const deleteMyDoctorProfile = () => API.delete('/doctors/me');
+export const saveDoctorAvailability = (data) => API.post('/doctors/availability', data);
+export const cancelDoctorAvailability = (availabilityId, message) =>
+  API.post(`/doctors/availability/${availabilityId}/cancel`, { message });
+export const getDoctorAvailability = (doctorId) => API.get(`/doctors/availability/${doctorId}`);
+export const getDoctorAppointmentRequests = () => API.get('/doctors/appointments/requests');
+export const updateDoctorAppointmentStatus = (id, status) => API.put(`/doctors/appointments/${id}/status`, { status });
+export const getDoctorTelemedicineLink = (appointmentId) => API.get(`/doctors/telemedicine/${appointmentId}`);
+export const createDoctorPrescription = (data) => API.post('/doctors/prescriptions', data);
+export const getDoctorPrescriptions = (patientId) =>
+  API.get('/doctors/prescriptions', { params: patientId ? { patientId } : undefined });
+export const getDoctorPatientReports = (patientId) => API.get(`/doctors/patient-reports/${patientId}`);
 
 /* ── Patients ─────────────────────────────────── */
+export const getPatients = (params) => API.get('/patients', { params });
 export const getPatient = (userId) => API.get(`/patients/${userId}`);
 export const createPatient = (data) => API.post('/patients', data);
 export const updatePatient = (userId, d) => API.put(`/patients/${userId}`, d);
 export const addMedHistory = (userId, d) => API.patch(`/patients/${userId}/history`, d);
+export const uploadPatientReport = (userId, formData) =>
+  API.post(`/patients/${userId}/reports`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+export const getPatientReports = (userId) => API.get(`/patients/${userId}/reports`);
 
 /* ── Appointments ─────────────────────────────── */
 export const getAppointments = (params) => API.get('/appointments', { params });

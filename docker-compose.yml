@@ -61,6 +61,7 @@ services:
       - PORT=5001
       - MONGO_URI=mongodb://mongo:27017/emedicare_auth
       - JWT_SECRET=change_this_secret_in_production
+      - FRONTEND_URL=http://localhost:5173
     depends_on:
       - mongo
     networks:
@@ -140,6 +141,11 @@ services:
     environment:
       - PORT=5006
       - MONGO_URI=mongodb://mongo:27017/emedicare_doctors
+      - JWT_SECRET=change_this_secret_in_production
+      - AUTH_SERVICE_URL=http://auth-service:5001/api/auth
+      - APPOINTMENT_SERVICE_URL=http://appointment-service:5002/api/appointments
+      - PATIENT_SERVICE_URL=http://patient-service:5007/api/patients
+      - TELEMEDICINE_SERVICE_URL=http://telemedicine-service:5008/api/telemedicine
     depends_on:
       - mongo
     networks:
@@ -191,6 +197,12 @@ services:
     environment:
       - PORT=5009
       - MONGO_URI=mongodb://mongo:27017/emedicare_admin
+      - JWT_SECRET=change_this_secret_in_production
+      - AUTH_SERVICE_URL=http://auth-service:5001/api/auth
+      - DOCTOR_SERVICE_URL=http://doctor-service:5006/api/doctors
+      - PATIENT_SERVICE_URL=http://patient-service:5007/api/patients
+      - APPOINTMENT_SERVICE_URL=http://appointment-service:5002/api/appointments
+      - PAYMENT_SERVICE_URL=http://payment-service:5003/api/payments
     depends_on:
       - mongo
     networks:

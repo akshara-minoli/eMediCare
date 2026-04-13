@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   createDoctorByAdmin,
   deleteAppointmentByAdmin,
@@ -207,6 +209,74 @@ export default function AdminPanel() {
     );
   };
 
+  const exportTableToPdf = (title, headers, rows) => {
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(14);
+    doc.text(title, 14, 16);
+    doc.setFontSize(9);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
+
+    autoTable(doc, {
+      head: [headers],
+      body: rows,
+      startY: 28,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [76, 97, 255] },
+      theme: 'grid',
+    });
+
+    const safeTitle = title.toLowerCase().replace(/\s+/g, '-');
+    doc.save(`${safeTitle}.pdf`);
+  };
+
+  const exportDoctorsPdf = () => {
+    const rows = doctors.map((doc) => [
+      doc._id || '-',
+      doc.name || '-',
+      doc.email || '-',
+      doc.specialty || '-',
+      doc.verificationStatus || 'pending',
+      doc.phone || '-',
+    ]);
+    exportTableToPdf('Doctor Management', ['ID', 'Name', 'Email', 'Specialty', 'Status', 'Phone'], rows);
+  };
+
+  const exportPatientsPdf = () => {
+    const rows = patients.map((patient) => [
+      patient.userId || '-',
+      patient.name || '-',
+      patient.email || '-',
+      patient.phone || '-',
+      patient.isActive ? 'Yes' : 'No',
+    ]);
+    exportTableToPdf('Patient Management', ['User ID', 'Name', 'Email', 'Phone', 'Active'], rows);
+  };
+
+  const exportAppointmentsPdf = () => {
+    const rows = appointments.map((item) => [
+      item._id || '-',
+      item.doctorId || '-',
+      item.patientId || '-',
+      `${new Date(item.date).toLocaleDateString()} ${item.time || ''}`.trim(),
+      item.type || 'in-person',
+      item.status || '-',
+    ]);
+    exportTableToPdf('Appointment Management', ['ID', 'Doctor', 'Patient', 'Date/Time', 'Type', 'Status'], rows);
+  };
+
+  const exportPaymentsPdf = () => {
+    const rows = payments.map((item) => [
+      item._id || '-',
+      item.transactionId || 'N/A',
+      item.patientId || '-',
+      item.appointmentId || '-',
+      String(item.amount ?? '-'),
+      item.method || '-',
+      item.status || '-',
+    ]);
+    exportTableToPdf('Payment Management', ['ID', 'Transaction', 'Patient', 'Appointment', 'Amount', 'Method', 'Status'], rows);
+  };
+
   if (loading) {
     return (
       <main className="min-h-screen bg-bg">
@@ -386,6 +456,7 @@ export default function AdminPanel() {
         <section id="doctors-section" className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-xl">Doctor Management</h2>
+            <button type="button" className="btn-outline" onClick={exportDoctorsPdf}>Export PDF</button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
@@ -431,7 +502,10 @@ export default function AdminPanel() {
         </section>
 
         <section id="patients-section" className="card">
-          <h2 className="font-heading text-xl mb-4">Patient Management</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-heading text-xl">Patient Management</h2>
+            <button type="button" className="btn-outline" onClick={exportPatientsPdf}>Export PDF</button>
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="text-white/60 border-b border-white/10">
@@ -472,7 +546,10 @@ export default function AdminPanel() {
         </section>
 
         <section id="appointments-section" className="card">
-          <h2 className="font-heading text-xl mb-4">Appointment Management</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-heading text-xl">Appointment Management</h2>
+            <button type="button" className="btn-outline" onClick={exportAppointmentsPdf}>Export PDF</button>
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="text-white/60 border-b border-white/10">
@@ -524,7 +601,10 @@ export default function AdminPanel() {
         </section>
 
         <section id="payments-section" className="card">
-          <h2 className="font-heading text-xl mb-4">Payment Management</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-heading text-xl">Payment Management</h2>
+            <button type="button" className="btn-outline" onClick={exportPaymentsPdf}>Export PDF</button>
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="text-white/60 border-b border-white/10">

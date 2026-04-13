@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const patientRoutes = require('./routes/patient.routes');
@@ -11,6 +13,10 @@ const PORT = process.env.PORT || 5007;
 // ── Middleware ────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
+
+const reportsDir = path.join(__dirname, '../uploads/patient-reports');
+fs.mkdirSync(reportsDir, { recursive: true });
+app.use('/api/patients/reports', express.static(reportsDir));
 
 // ── Database ──────────────────────────────────────────────────
 mongoose
