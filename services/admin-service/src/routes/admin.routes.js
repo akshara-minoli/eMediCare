@@ -1,22 +1,36 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/admin.controller');
+const adminAuth = require('../middleware/adminAuth.middleware');
 
-// ── Admin Routes ──────────────────────────────────────────────
+// Secure all admin endpoints with JWT + role check.
+router.use(adminAuth);
 
-// GET: List all admins
-router.get('/', adminController.getAllAdmins);
+// Dashboard
+router.get('/overview', adminController.getOverview);
 
-// GET: Get admin detail by ID
-router.get('/:id', adminController.getAdminById);
+// Doctors
+router.get('/doctors', adminController.getDoctors);
+router.get('/doctors/pending', adminController.getPendingDoctors);
+router.put('/doctors/:id/status', adminController.updateDoctorStatus);
+router.put('/doctors/:id', adminController.updateDoctor);
+router.delete('/doctors/:id', adminController.deleteDoctor);
+router.patch('/doctors/:id/block', adminController.blockDoctor);
+router.post('/create-doctor', adminController.createDoctor);
+router.post('/doctors', adminController.createDoctor);
 
-// POST: Create a new admin
-router.post('/', adminController.createAdmin);
+// Patients
+router.get('/patients', adminController.getPatients);
+router.put('/patients/:userId', adminController.updatePatient);
+router.patch('/patients/:userId/block', adminController.blockPatient);
+router.delete('/patients/:userId', adminController.deletePatient);
 
-// PUT: Update admin profile
-router.put('/:id', adminController.updateAdmin);
-
-// DELETE: Deactivate admin
-router.delete('/:id', adminController.deleteAdmin);
+// Monitoring
+router.get('/appointments', adminController.getAppointments);
+router.put('/appointments/:id', adminController.updateAppointment);
+router.delete('/appointments/:id', adminController.deleteAppointment);
+router.get('/payments', adminController.getPayments);
+router.put('/payments/:id', adminController.updatePayment);
+router.delete('/payments/:id', adminController.deletePayment);
 
 module.exports = router;

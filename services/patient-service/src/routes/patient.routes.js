@@ -1,6 +1,29 @@
 const router = require('express').Router();
 const Patient = require('../models/patient.model');
 
+// ── GET /api/patients — List all patients ───────────────────
+router.get('/', async (req, res) => {
+  try {
+    const { isActive, search } = req.query;
+    const filter = {};
+
+    if (typeof isActive === 'string') {
+      filter.isActive = isActive === 'true';
+    }
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const patients = await Patient.find(filter).sort({ createdAt: -1 });
+    res.json({ count: patients.length, patients });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 // ── GET /api/patients/:userId — Get patient by userId ──────
 router.get('/:userId', async (req, res) => {
   try {
@@ -50,6 +73,32 @@ router.patch('/:userId/history', async (req, res) => {
     );
     if (!patient) return res.status(404).json({ message: 'Patient not found' });
     res.json({ message: 'Medical history updated', patient });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// ── PATCH /api/patients/:userId/block — block patient ───────
+router.patch('/:userId/block', async (req, res) => {
+  try {
+    const patient = await Patient.findOneAndUpdate(
+      { userId: req.params.userId },
+      { isActive: false },
+      { new: true }
+    );
+    if (!patient) return res.status(404).json({ message: 'Patient not found' });
+    res.json({ message: 'Patient blocked', patient });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// ── DELETE /api/patients/:userId — delete patient profile ───
+router.delete('/:userId', async (req, res) => {
+  try {
+    const patient = await Patient.findOneAndDelete({ userId: req.params.userId });
+    if (!patient) return res.status(404).json({ message: 'Patient not found' });
+    res.json({ message: 'Patient deleted' });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }

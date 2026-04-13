@@ -8,7 +8,6 @@ const PORT = process.env.PORT || 8080;
 
 // ── Middleware ────────────────────────────────────────────────
 app.use(cors());
-app.use(express.json());
 
 // ── Health Check ──────────────────────────────────────────────
 app.get('/health', (req, res) => {

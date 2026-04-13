@@ -33,7 +33,10 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    collection: 'auth',
+  }
 );
 
 module.exports = mongoose.model('User', userSchema);

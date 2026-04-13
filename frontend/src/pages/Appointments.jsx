@@ -1,6 +1,6 @@
 export default function Appointments() {
   return (
-    <main className="pt-[72px] min-h-screen bg-bg">
+    <main className="min-h-screen bg-bg">
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="section-tag mb-3">My Schedule</div>
         <h1 className="text-3xl font-heading font-bold mb-2">Appointments</h1>

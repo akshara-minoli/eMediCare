@@ -41,7 +41,7 @@ const doctorSchema = new mongoose.Schema(
     },
     consultationFee: {
       type: Number,
-      required: true,
+      default: 0,
     },
     availableSlots: [
       {
@@ -64,6 +64,11 @@ const doctorSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    verificationStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
     isAvailable: {
       type: Boolean,
       default: true,
@@ -81,7 +86,10 @@ const doctorSchema = new mongoose.Schema(
       default: '',
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    collection: 'doctor',
+  }
 );
 
 module.exports = mongoose.model('Doctor', doctorSchema);

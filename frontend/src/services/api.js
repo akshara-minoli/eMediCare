@@ -51,10 +51,26 @@ export const startSession = (id) => API.patch(`/telemedicine/sessions/${id}/star
 export const endSession = (id, data) => API.patch(`/telemedicine/sessions/${id}/end`, data);
 
 /* ── Admin ────────────────────────────────────── */
-export const getAdmins = () => API.get('/admin');
-export const getAdminById = (id) => API.get(`/admin/${id}`);
-export const createAdmin = (data) => API.post('/admin', data);
-export const updateAdmin = (id, data) => API.put(`/admin/${id}`, data);
-export const deleteAdmin = (id) => API.delete(`/admin/${id}`);
+export const getAdminOverview = () => API.get('/admin/overview');
+
+export const getAdminDoctors = (params) => API.get('/admin/doctors', { params });
+export const getAdminPendingDoctors = () => API.get('/admin/doctors/pending');
+export const updateAdminDoctorStatus = (id, status) => API.put(`/admin/doctors/${id}/status`, { status });
+export const updateDoctorByAdmin = (id, data) => API.put(`/admin/doctors/${id}`, data);
+export const deleteDoctorByAdmin = (id) => API.delete(`/admin/doctors/${id}`);
+export const blockDoctorByAdmin = (id) => API.patch(`/admin/doctors/${id}/block`);
+export const createDoctorByAdmin = (data) => API.post('/admin/create-doctor', data);
+
+export const getAdminPatients = (params) => API.get('/admin/patients', { params });
+export const updatePatientByAdmin = (userId, data) => API.put(`/admin/patients/${userId}`, data);
+export const blockPatientByAdmin = (userId) => API.patch(`/admin/patients/${userId}/block`);
+export const deletePatientByAdmin = (userId) => API.delete(`/admin/patients/${userId}`);
+
+export const getAdminAppointments = (params) => API.get('/admin/appointments', { params });
+export const updateAppointmentByAdmin = (id, data) => API.put(`/admin/appointments/${id}`, data);
+export const deleteAppointmentByAdmin = (id) => API.delete(`/admin/appointments/${id}`);
+export const getAdminPayments = (params) => API.get('/admin/payments', { params });
+export const updatePaymentByAdmin = (id, data) => API.put(`/admin/payments/${id}`, data);
+export const deletePaymentByAdmin = (id) => API.delete(`/admin/payments/${id}`);
 
 export default API;

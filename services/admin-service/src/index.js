@@ -13,11 +13,15 @@ app.use(cors());
 app.use(express.json());
 
 // ── Database ──────────────────────────────────────────────────
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/emedicare_admin';
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log('✅ [Admin Service] MongoDB connected'))
-  .catch((err) => console.error('❌ MongoDB connection error:', err));
+const MONGO_URI = process.env.ADMIN_DB_URI || process.env.MONGO_URI;
+if (MONGO_URI) {
+  mongoose
+    .connect(MONGO_URI)
+    .then(() => console.log('✅ [Admin Service] MongoDB connected'))
+    .catch((err) => console.error('❌ MongoDB connection error:', err));
+} else {
+  console.log('ℹ️ [Admin Service] Running without admin-db (stateless orchestration mode)');
+}
 
 // ── Routes ────────────────────────────────────────────────────
 app.use('/api/admin', adminRoutes);

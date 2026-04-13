@@ -35,7 +35,7 @@ export default function SymptomChecker() {
   };
 
   return (
-    <main className="pt-[72px] min-h-screen bg-bg">
+    <main className="min-h-screen bg-bg">
       <div className="max-w-2xl mx-auto px-6 py-12">
 
         {/* Header */}
