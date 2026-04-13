@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   cancelDoctorAvailability,
   createDoctorPrescription,
@@ -36,7 +38,7 @@ export default function DoctorDashboard() {
   const [patientReport, setPatientReport] = useState(null);
   const [meetingLink, setMeetingLink] = useState('');
 
-  const [profileForm, setProfileForm] = useState({ name: '', specialty: '', phone: '' });
+  const [profileForm, setProfileForm] = useState({ name: '', specialty: '', phone: '', experience: '', consultationFee: '' });
   const [availabilityForm, setAvailabilityForm] = useState({ date: '', fromTime: '', toTime: '' });
   const [prescriptionForm, setPrescriptionForm] = useState({ patientId: '', diagnosis: '', medicines: '', notes: '' });
   const [reportPatientId, setReportPatientId] = useState('');
@@ -65,9 +67,29 @@ export default function DoctorDashboard() {
   };
 
   const patientNameMap = useMemo(
-    () => new Map(patients.map((patient) => [patient.userId, patient.name || patient.userId])),
+    () => new Map(
+      patients.flatMap((patient) => [
+        [patient.userId, patient.name || patient.userId],
+        [patient._id, patient.name || patient._id],
+      ])
+    ),
     [patients]
   );
+
+  const relatedPatientCount = useMemo(() => {
+    const patientIds = new Set();
+    appointments.forEach((item) => {
+      if (item.patientId) patientIds.add(String(item.patientId));
+    });
+    prescriptions.forEach((item) => {
+      if (item.patientId) patientIds.add(String(item.patientId));
+    });
+    return patientIds.size;
+  }, [appointments, prescriptions]);
+
+  const doctorAvailabilityCount = availability.length;
+  const doctorPrescriptionCount = prescriptions.length;
+  const doctorAppointmentCount = appointments.length;
 
   const timeOptions = useMemo(
     () => Array.from({ length: 24 }, (_, hour) => `${String(hour).padStart(2, '0')}:00`),
@@ -137,6 +159,8 @@ export default function DoctorDashboard() {
         name: doctor?.name || '',
         specialty: doctor?.specialty || 'General Physician',
         phone: doctor?.phone || '',
+        experience: doctor?.experience ?? 0,
+        consultationFee: doctor?.consultationFee ?? 0,
       });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load doctor profile');
@@ -145,10 +169,38 @@ export default function DoctorDashboard() {
     }
   };
 
+  const syncProfile = async () => {
+    try {
+      const response = await getMyDoctorProfile();
+      const doctor = response.data?.doctor;
+      if (!doctor) return;
+      setProfile(doctor);
+      setProfileForm({
+        name: doctor?.name || '',
+        specialty: doctor?.specialty || 'General Physician',
+        phone: doctor?.phone || '',
+        experience: doctor?.experience ?? 0,
+        consultationFee: doctor?.consultationFee ?? 0,
+      });
+    } catch {
+      // Keep current profile state if background sync fails.
+    }
+  };
+
   const loadAvailability = async () => {
     if (!profile?._id) return;
-    const response = await getDoctorAvailability(profile._id);
-    setAvailability(response.data?.availability || []);
+    const ids = Array.from(new Set([profile._id, profile.userId].filter(Boolean)));
+    const responses = await Promise.allSettled(ids.map((doctorId) => getDoctorAvailability(doctorId)));
+    const availabilityById = new Map();
+
+    responses.forEach((result) => {
+      if (result.status !== 'fulfilled') return;
+      (result.value.data?.availability || []).forEach((item) => {
+        availabilityById.set(String(item._id), item);
+      });
+    });
+
+    setAvailability(Array.from(availabilityById.values()));
   };
 
   const loadAppointments = async () => {
@@ -167,7 +219,8 @@ export default function DoctorDashboard() {
 
   const loadPrescriptions = async () => {
     const response = await getDoctorPrescriptions();
-    setPrescriptions(response.data?.prescriptions || []);
+    const prescriptionsData = response.data?.prescriptions || [];
+    setPrescriptions(Array.from(new Map(prescriptionsData.map((item) => [String(item._id), item])).values()));
   };
 
   useEffect(() => {
@@ -189,6 +242,10 @@ export default function DoctorDashboard() {
 
   useEffect(() => {
     if (!profile) return;
+    if (activeTab === 'Profile') {
+      syncProfile();
+      return;
+    }
     if (activeTab === 'Availability') {
       runBusy(loadAvailability);
       return;
@@ -328,6 +385,55 @@ export default function DoctorDashboard() {
     window.location.href = '/';
   };
 
+  const exportAvailabilityPdf = () => {
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(14);
+    doc.text('Availability Schedule', 14, 16);
+    doc.setFontSize(9);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
+
+    const rows = availability.map((item) => [
+      item.date || '-',
+      (item.timeSlots || []).join(', ') || 'None',
+    ]);
+
+    autoTable(doc, {
+      head: [['Date', 'Time Slots']],
+      body: rows.length ? rows : [['No data', '-']],
+      startY: 28,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [79, 70, 229] },
+    });
+
+    doc.save('availability-schedule.pdf');
+  };
+
+  const exportPrescriptionsPdf = () => {
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(14);
+    doc.text('Issued Prescriptions', 14, 16);
+    doc.setFontSize(9);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
+
+    const rows = prescriptions.map((item) => [
+      patientNameMap.get(item.patientId) || item.patientId || '-',
+      item.diagnosis || '-',
+      (item.medicines || []).join(', ') || 'None',
+      item.notes || '-',
+      item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-',
+    ]);
+
+    autoTable(doc, {
+      head: [['Patient', 'Diagnosis', 'Medicines', 'Notes', 'Created']],
+      body: rows.length ? rows : [['No data', '-', '-', '-', '-']],
+      startY: 28,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [79, 70, 229] },
+    });
+
+    doc.save('issued-prescriptions.pdf');
+  };
+
   if (loading) {
     return (
       <main className="min-h-screen bg-bg flex items-center justify-center">
@@ -425,7 +531,7 @@ export default function DoctorDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="card">
                 <h3 className="text-sm text-white/60">Total Appointments</h3>
-                <p className="text-3xl font-heading font-bold mt-1">{totalAppointmentsCount}</p>
+                <p className="text-3xl font-heading font-bold mt-1">{doctorAppointmentCount}</p>
               </div>
               <div className="card">
                 <h3 className="text-sm text-white/60">Appointments Today</h3>
@@ -440,12 +546,17 @@ export default function DoctorDashboard() {
                 <p><span className="text-white/60">Specialty:</span> {profile?.specialty || '-'}</p>
                 <p><span className="text-white/60">Phone:</span> {profile?.phone || '-'}</p>
                 <p><span className="text-white/60">Email:</span> {profile?.email || '-'}</p>
+                <p><span className="text-white/60">Experience:</span> {profile?.experience ?? 0} years</p>
+                <p><span className="text-white/60">Consultation Fee:</span> {profile?.consultationFee ?? 0}</p>
               </div>
               <p className="text-xs text-white/45 mt-3">Click the profile icon in the header to update or delete your profile.</p>
             </div>
 
             <div className="card">
-              <h2 className="font-heading text-xl mb-4">Availability Schedule</h2>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h2 className="font-heading text-xl">Availability Schedule</h2>
+                <button type="button" className="btn-outline text-sm" onClick={exportAvailabilityPdf}>Export PDF</button>
+              </div>
               <div className="space-y-2">
                 {availability.length === 0 && <p className="text-sm text-white/50">No availability schedule saved yet.</p>}
                 {availability.map((item) => (
@@ -466,7 +577,10 @@ export default function DoctorDashboard() {
             </div>
 
             <div className="card">
-              <h2 className="font-heading text-xl mb-4">Issued Prescriptions</h2>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h2 className="font-heading text-xl">Issued Prescriptions</h2>
+                <button type="button" className="btn-outline text-sm" onClick={exportPrescriptionsPdf}>Export PDF</button>
+              </div>
               <div className="space-y-2">
                 {prescriptions.length === 0 && <p className="text-sm text-white/50">No prescriptions issued yet.</p>}
                 {prescriptions.map((item) => (
@@ -728,10 +842,30 @@ export default function DoctorDashboard() {
                 </button>
               </div>
               <form onSubmit={submitProfile} className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <input className="form-input" value={profileForm.name} onChange={(e) => setProfileForm((p) => ({ ...p, name: e.target.value }))} placeholder="Name" required />
-                <input className="form-input" value={profileForm.specialty} onChange={(e) => setProfileForm((p) => ({ ...p, specialty: e.target.value }))} placeholder="Specialty" required />
-                <input className="form-input" value={profileForm.phone} onChange={(e) => setProfileForm((p) => ({ ...p, phone: e.target.value }))} placeholder="Phone" />
-                <input className="form-input opacity-70" value={profile?.email || ''} disabled />
+                <label className="block">
+                  <span className="form-label">Name</span>
+                  <input className="form-input" value={profileForm.name} onChange={(e) => setProfileForm((p) => ({ ...p, name: e.target.value }))} placeholder="Name" required />
+                </label>
+                <label className="block">
+                  <span className="form-label">Specialty</span>
+                  <input className="form-input" value={profileForm.specialty} onChange={(e) => setProfileForm((p) => ({ ...p, specialty: e.target.value }))} placeholder="Specialty" required />
+                </label>
+                <label className="block">
+                  <span className="form-label">Phone</span>
+                  <input className="form-input" value={profileForm.phone} onChange={(e) => setProfileForm((p) => ({ ...p, phone: e.target.value }))} placeholder="Phone" />
+                </label>
+                <label className="block">
+                  <span className="form-label">Experience (Years)</span>
+                  <input className="form-input" type="number" min="0" value={profileForm.experience} onChange={(e) => setProfileForm((p) => ({ ...p, experience: e.target.value }))} placeholder="Experience (years)" />
+                </label>
+                <label className="block">
+                  <span className="form-label">Consultation Fee</span>
+                  <input className="form-input" type="number" min="0" value={profileForm.consultationFee} onChange={(e) => setProfileForm((p) => ({ ...p, consultationFee: e.target.value }))} placeholder="Consultation fee" />
+                </label>
+                <label className="block">
+                  <span className="form-label">Email</span>
+                  <input className="form-input opacity-70" value={profile?.email || ''} disabled />
+                </label>
                 <button type="submit" disabled={busy} className="btn-primary md:col-span-2 justify-center">Update Profile</button>
               </form>
               <button

@@ -32,7 +32,10 @@ export default function Appointments() {
         ]);
 
         const doctorLookup = Object.fromEntries(
-          (doctorsRes.data?.doctors || []).map((doctor) => [doctor._id, doctor.name])
+          (doctorsRes.data?.doctors || []).flatMap((doctor) => [
+            [doctor._id, doctor.name],
+            [doctor.userId, doctor.name],
+          ])
         );
 
         setDoctorMap(doctorLookup);

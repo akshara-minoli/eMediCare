@@ -33,6 +33,10 @@ export default function Register() {
 
       <div className="w-full max-w-md relative z-10 animate-fade-up">
         <div className="glass rounded-2xl p-8">
+          <Link to="/" className="inline-flex mb-6 text-sm text-primary hover:underline font-medium">
+            Back to Home
+          </Link>
+
           <div className="text-center mb-8">
             <span className="text-4xl">⚕</span>
             <h1 className="text-2xl font-heading font-bold mt-2">Create your account</h1>

@@ -49,6 +49,13 @@ export default function AdminPanel() {
   const [patients, setPatients] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [editModal, setEditModal] = useState({
+    open: false,
+    type: '',
+    id: '',
+    title: '',
+    fields: {},
+  });
 
   const [doctorForm, setDoctorForm] = useState({
     email: '',
@@ -56,6 +63,8 @@ export default function AdminPanel() {
     name: '',
     specialty: 'General Physician',
     phone: '',
+    experience: '',
+    consultationFee: '',
   });
 
   const pendingDoctors = useMemo(
@@ -163,50 +172,115 @@ export default function AdminPanel() {
         name: '',
         specialty: 'General Physician',
         phone: '',
+        experience: '',
+        consultationFee: '',
       });
       setSuccess(response.data?.message || 'Doctor created successfully');
     });
   };
 
-  const editDoctor = async (doc) => {
-    const name = window.prompt('Doctor name', doc.name || '');
-    if (name === null) return;
-    const specialty = window.prompt('Specialty', doc.specialty || 'General Physician');
-    if (specialty === null) return;
-    await withBusy(`edit-doctor-${doc._id}`, () =>
-      updateDoctorByAdmin(doc._id, { name: name.trim(), specialty: specialty.trim() || 'General Physician' })
-    );
+  const closeEditModal = () => {
+    setEditModal({ open: false, type: '', id: '', title: '', fields: {} });
   };
 
-  const editPatient = async (patient) => {
-    const name = window.prompt('Patient name', patient.name || '');
-    if (name === null) return;
-    const phone = window.prompt('Phone', patient.phone || '');
-    if (phone === null) return;
-    await withBusy(`edit-patient-${patient.userId}`, () =>
-      updatePatientByAdmin(patient.userId, { name: name.trim(), phone: phone.trim() })
-    );
+  const openDoctorEdit = (doc) => {
+    setEditModal({
+      open: true,
+      type: 'doctor',
+      id: doc._id,
+      title: 'Edit Doctor',
+      fields: {
+        name: doc.name || '',
+        specialty: doc.specialty || 'General Physician',
+        phone: doc.phone || '',
+        experience: String(doc.experience ?? 0),
+        consultationFee: String(doc.consultationFee ?? 0),
+      },
+    });
   };
 
-  const editAppointment = async (appointment) => {
-    const status = window.prompt('Status (pending, confirmed, completed, cancelled)', appointment.status || 'pending');
-    if (status === null) return;
-    await withBusy(`edit-appointment-${appointment._id}`, () =>
-      updateAppointmentByAdmin(appointment._id, { status: status.trim().toLowerCase() })
-    );
+  const openPatientEdit = (patient) => {
+    setEditModal({
+      open: true,
+      type: 'patient',
+      id: patient.userId,
+      title: 'Edit Patient',
+      fields: {
+        name: patient.name || '',
+        phone: patient.phone || '',
+      },
+    });
   };
 
-  const editPayment = async (payment) => {
-    const amount = window.prompt('Amount', String(payment.amount ?? '0'));
-    if (amount === null) return;
-    const status = window.prompt('Status (pending, success, failed, refunded)', payment.status || 'pending');
-    if (status === null) return;
-    await withBusy(`edit-payment-${payment._id}`, () =>
-      updatePaymentByAdmin(payment._id, {
-        amount: Number(amount),
-        status: status.trim().toLowerCase(),
-      })
-    );
+  const openAppointmentEdit = (appointment) => {
+    setEditModal({
+      open: true,
+      type: 'appointment',
+      id: appointment._id,
+      title: 'Edit Appointment',
+      fields: {
+        status: appointment.status || 'pending',
+      },
+    });
+  };
+
+  const openPaymentEdit = (payment) => {
+    setEditModal({
+      open: true,
+      type: 'payment',
+      id: payment._id,
+      title: 'Edit Payment',
+      fields: {
+        amount: String(payment.amount ?? 0),
+        status: payment.status || 'pending',
+      },
+    });
+  };
+
+  const submitEditModal = async (e) => {
+    e.preventDefault();
+
+    if (!editModal.type || !editModal.id) return;
+
+    if (editModal.type === 'doctor') {
+      await withBusy(`edit-doctor-${editModal.id}`, () =>
+        updateDoctorByAdmin(editModal.id, {
+          name: editModal.fields.name.trim(),
+          specialty: editModal.fields.specialty.trim() || 'General Physician',
+          phone: editModal.fields.phone.trim(),
+          experience: Number(editModal.fields.experience) || 0,
+          consultationFee: Number(editModal.fields.consultationFee) || 0,
+        })
+      );
+    }
+
+    if (editModal.type === 'patient') {
+      await withBusy(`edit-patient-${editModal.id}`, () =>
+        updatePatientByAdmin(editModal.id, {
+          name: editModal.fields.name.trim(),
+          phone: editModal.fields.phone.trim(),
+        })
+      );
+    }
+
+    if (editModal.type === 'appointment') {
+      await withBusy(`edit-appointment-${editModal.id}`, () =>
+        updateAppointmentByAdmin(editModal.id, {
+          status: editModal.fields.status.trim().toLowerCase(),
+        })
+      );
+    }
+
+    if (editModal.type === 'payment') {
+      await withBusy(`edit-payment-${editModal.id}`, () =>
+        updatePaymentByAdmin(editModal.id, {
+          amount: Number(editModal.fields.amount),
+          status: editModal.fields.status.trim().toLowerCase(),
+        })
+      );
+    }
+
+    closeEditModal();
   };
 
   const exportTableToPdf = (title, headers, rows) => {
@@ -402,6 +476,22 @@ export default function AdminPanel() {
                 value={doctorForm.phone}
                 onChange={(e) => setDoctorForm((prev) => ({ ...prev, phone: e.target.value }))}
               />
+              <input
+                className="form-input"
+                type="number"
+                min="0"
+                placeholder="Experience (years)"
+                value={doctorForm.experience}
+                onChange={(e) => setDoctorForm((prev) => ({ ...prev, experience: e.target.value }))}
+              />
+              <input
+                className="form-input"
+                type="number"
+                min="0"
+                placeholder="Consultation fee"
+                value={doctorForm.consultationFee}
+                onChange={(e) => setDoctorForm((prev) => ({ ...prev, consultationFee: e.target.value }))}
+              />
               <select
                 className="form-input sm:col-span-2"
                 value={doctorForm.specialty}
@@ -464,6 +554,8 @@ export default function AdminPanel() {
                 <tr>
                   <th className="text-left py-2 pr-3">Name</th>
                   <th className="text-left py-2 pr-3">Specialty</th>
+                  <th className="text-left py-2 pr-3">Exp.</th>
+                  <th className="text-left py-2 pr-3">Fee</th>
                   <th className="text-left py-2 pr-3">Status</th>
                   <th className="text-left py-2 pr-3">Actions</th>
                 </tr>
@@ -473,12 +565,14 @@ export default function AdminPanel() {
                   <tr key={doc._id} className="border-b border-white/5">
                     <td className="py-2 pr-3">{doc.name}</td>
                     <td className="py-2 pr-3">{doc.specialty}</td>
+                    <td className="py-2 pr-3">{doc.experience ?? 0}</td>
+                    <td className="py-2 pr-3">{doc.consultationFee ?? 0}</td>
                     <td className="py-2 pr-3 capitalize">{doc.verificationStatus || 'pending'}</td>
                     <td className="py-2 pr-3 space-x-3">
                       <button
                         className="text-sky-300 hover:text-sky-100"
                         disabled={busy === `edit-doctor-${doc._id}`}
-                        onClick={() => editDoctor(doc)}
+                        onClick={() => openDoctorEdit(doc)}
                       >
                         Edit
                       </button>
@@ -526,7 +620,7 @@ export default function AdminPanel() {
                       <button
                         className="text-sky-300 hover:text-sky-100"
                         disabled={busy === `edit-patient-${p.userId}`}
-                        onClick={() => editPatient(p)}
+                        onClick={() => openPatientEdit(p)}
                       >
                         Edit
                       </button>
@@ -577,7 +671,7 @@ export default function AdminPanel() {
                       <button
                         className="text-sky-300 hover:text-sky-100"
                         disabled={busy === `edit-appointment-${item._id}`}
-                        onClick={() => editAppointment(item)}
+                        onClick={() => openAppointmentEdit(item)}
                       >
                         Edit
                       </button>
@@ -634,7 +728,7 @@ export default function AdminPanel() {
                       <button
                         className="text-sky-300 hover:text-sky-100"
                         disabled={busy === `edit-payment-${item._id}`}
-                        onClick={() => editPayment(item)}
+                        onClick={() => openPaymentEdit(item)}
                       >
                         Edit
                       </button>
@@ -656,6 +750,136 @@ export default function AdminPanel() {
             </table>
           </div>
         </section>
+
+        {editModal.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+            <div className="w-full max-w-2xl card">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-heading text-xl">{editModal.title}</h2>
+                <button type="button" className="text-white/60 hover:text-white" onClick={closeEditModal}>
+                  Close
+                </button>
+              </div>
+
+              <form onSubmit={submitEditModal} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {editModal.type === 'doctor' && (
+                  <>
+                    <label className="block">
+                      <span className="form-label">Doctor Name</span>
+                      <input
+                        className="form-input"
+                        value={editModal.fields.name || ''}
+                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, name: e.target.value } }))}
+                        placeholder="Doctor name"
+                        required
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="form-label">Specialty</span>
+                      <input
+                        className="form-input"
+                        value={editModal.fields.specialty || ''}
+                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, specialty: e.target.value } }))}
+                        placeholder="Specialty"
+                        required
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="form-label">Phone</span>
+                      <input
+                        className="form-input"
+                        value={editModal.fields.phone || ''}
+                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, phone: e.target.value } }))}
+                        placeholder="Phone"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="form-label">Experience (Years)</span>
+                      <input
+                        className="form-input"
+                        type="number"
+                        min="0"
+                        value={editModal.fields.experience || ''}
+                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, experience: e.target.value } }))}
+                        placeholder="Experience (years)"
+                      />
+                    </label>
+                    <label className="block md:col-span-2">
+                      <span className="form-label">Consultation Fee</span>
+                      <input
+                        className="form-input"
+                        type="number"
+                        min="0"
+                        value={editModal.fields.consultationFee || ''}
+                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, consultationFee: e.target.value } }))}
+                        placeholder="Consultation fee"
+                      />
+                    </label>
+                  </>
+                )}
+
+                {editModal.type === 'patient' && (
+                  <>
+                    <input
+                      className="form-input"
+                      value={editModal.fields.name || ''}
+                      onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, name: e.target.value } }))}
+                      placeholder="Patient name"
+                      required
+                    />
+                    <input
+                      className="form-input"
+                      value={editModal.fields.phone || ''}
+                      onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, phone: e.target.value } }))}
+                      placeholder="Phone"
+                    />
+                  </>
+                )}
+
+                {editModal.type === 'appointment' && (
+                  <select
+                    className="form-input md:col-span-2"
+                    value={editModal.fields.status || 'pending'}
+                    onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, status: e.target.value } }))}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                )}
+
+                {editModal.type === 'payment' && (
+                  <>
+                    <input
+                      className="form-input"
+                      type="number"
+                      min="0"
+                      value={editModal.fields.amount || ''}
+                      onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, amount: e.target.value } }))}
+                      placeholder="Amount"
+                      required
+                    />
+                    <select
+                      className="form-input"
+                      value={editModal.fields.status || 'pending'}
+                      onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, status: e.target.value } }))}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="success">Success</option>
+                      <option value="failed">Failed</option>
+                      <option value="refunded">Refunded</option>
+                    </select>
+                  </>
+                )}
+
+                <button type="submit" disabled={!!busy} className="btn-primary md:col-span-2 justify-center">
+                  Save Changes
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
         </div>
       </div>
     </main>
