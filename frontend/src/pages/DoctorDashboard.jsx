@@ -236,13 +236,6 @@ export default function DoctorDashboard() {
       const response = await getMyDoctorProfile();
       const doctor = response.data?.doctor;
       setProfile(doctor);
-      setProfileForm({
-        name: doctor?.name || '',
-        specialty: doctor?.specialty || 'General Physician',
-        phone: doctor?.phone || '',
-        experience: doctor?.experience ?? 0,
-        consultationFee: doctor?.consultationFee ?? 0,
-      });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load doctor profile');
     } finally {
@@ -256,16 +249,20 @@ export default function DoctorDashboard() {
       const doctor = response.data?.doctor;
       if (!doctor) return;
       setProfile(doctor);
-      setProfileForm({
-        name: doctor?.name || '',
-        specialty: doctor?.specialty || 'General Physician',
-        phone: doctor?.phone || '',
-        experience: doctor?.experience ?? 0,
-        consultationFee: doctor?.consultationFee ?? 0,
-      });
     } catch {
       // Keep current profile state if background sync fails.
     }
+  };
+
+  const openProfileEditor = () => {
+    setProfileForm({
+      name: profile?.name || '',
+      specialty: profile?.specialty || 'General Physician',
+      phone: profile?.phone || '',
+      experience: profile?.experience ?? 0,
+      consultationFee: profile?.consultationFee ?? 0,
+    });
+    setProfileEditorOpen(true);
   };
 
   const loadAvailability = async () => {
@@ -634,7 +631,7 @@ export default function DoctorDashboard() {
             </div>
             <button
               type="button"
-              onClick={() => setProfileEditorOpen(true)}
+              onClick={openProfileEditor}
               className="w-11 h-11 rounded-full border border-primary/35 bg-primary/10 hover:bg-primary/20 text-lg transition-colors"
               aria-label="Open profile management"
               title="Profile Management"
