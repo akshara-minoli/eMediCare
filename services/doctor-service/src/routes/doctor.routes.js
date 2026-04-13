@@ -252,7 +252,16 @@ router.put('/appointments/:id/status', doctorAuth, async (req, res) => {
       return res.status(400).json({ message: 'Invalid status value' });
     }
 
-    const response = await clients.appointment.put(`/${req.params.id}/status`, { status });
+    const doctor = (await resolveDoctorFromToken(req)) || (await createDoctorProfileFromAuth(req));
+    if (!doctor) return res.status(404).json({ message: 'Doctor profile not found' });
+
+    const payload = { status };
+    if (status === 'confirmed') {
+      payload.confirmedByDoctorId = doctor._id.toString();
+      payload.confirmedByDoctorUserId = doctor.userId;
+    }
+
+    const response = await clients.appointment.put(`/${req.params.id}/status`, payload);
     res.json(response.data);
   } catch (err) {
     res.status(err.response?.status || 500).json({
@@ -392,6 +401,20 @@ router.get('/pending', async (req, res) => {
   try {
     const doctors = await Doctor.find({ verificationStatus: 'pending' }).sort({ createdAt: -1 });
     res.json({ count: doctors.length, doctors });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// ── GET /api/doctors/by-email/:email — lookup by email ──────
+router.get('/by-email/:email', async (req, res) => {
+  try {
+    const email = decodeURIComponent(req.params.email || '').trim().toLowerCase();
+    if (!email) return res.status(400).json({ message: 'Email is required' });
+
+    const doctor = await Doctor.findOne({ email });
+    if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
+    res.json({ doctor });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }

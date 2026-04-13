@@ -28,6 +28,14 @@ const appointmentSchema = new mongoose.Schema(
       enum: ['pending', 'confirmed', 'completed', 'cancelled'],
       default: 'pending',
     },
+    confirmedByDoctorId: {
+      type: String,
+      default: '',
+    },
+    confirmedByDoctorUserId: {
+      type: String,
+      default: '',
+    },
     notes: {
       type: String,
       default: '',

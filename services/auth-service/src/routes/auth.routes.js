@@ -94,6 +94,23 @@ router.delete('/users/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// ── GET /api/auth/users/by-email?email=... (admin-only lookup) ─
+router.get('/users/by-email', requireAdmin, async (req, res) => {
+  try {
+    const normalizedEmail = typeof req.query.email === 'string' ? req.query.email.trim().toLowerCase() : '';
+    if (!normalizedEmail) {
+      return res.status(400).json({ message: 'email is required' });
+    }
+
+    const user = await User.findOne({ email: normalizedEmail }).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 // ── POST /api/auth/login ──────────────────────────────────────
 router.post('/login', async (req, res) => {
   try {

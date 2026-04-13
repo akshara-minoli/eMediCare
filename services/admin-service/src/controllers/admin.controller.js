@@ -112,6 +112,18 @@ exports.updateDoctor = async (req, res) => {
 
 exports.deleteDoctor = async (req, res) => {
   try {
+    const doctorRes = await clients.doctor.get(`/${req.params.id}`);
+    const doctor = doctorRes.data?.doctor;
+
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    const authUserId = doctor.userId;
+    if (authUserId) {
+      await clients.auth.delete(`/users/${authUserId}`, { headers: forwardAuthHeader(req) });
+    }
+
     const response = await clients.doctor.delete(`/${req.params.id}`);
     res.json(response.data);
   } catch (err) {
@@ -121,8 +133,9 @@ exports.deleteDoctor = async (req, res) => {
 
 exports.createDoctor = async (req, res) => {
   let authUserId = null;
+  let authUserCreatedHere = false;
   try {
-    const { email, password, name, specialty, phone } = req.body;
+    const { email, password, name, specialty, phone, experience, consultationFee } = req.body;
     const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
 
     if (!normalizedEmail || !password || !name || !specialty) {
@@ -130,14 +143,41 @@ exports.createDoctor = async (req, res) => {
     }
 
     // Step 1: create auth credentials in auth-service
-    const authResponse = await clients.auth.post(
-      '/register',
-      { email: normalizedEmail, password, role: 'doctor' }
-    );
+    try {
+      const authResponse = await clients.auth.post(
+        '/register',
+        { email: normalizedEmail, password, role: 'doctor' }
+      );
 
-    authUserId = authResponse.data?.userId || authResponse.data?.user?.id;
-    if (!authUserId) {
-      return res.status(502).json({ message: 'Auth service did not return a user id' });
+      authUserId = authResponse.data?.userId || authResponse.data?.user?.id;
+      authUserCreatedHere = true;
+      if (!authUserId) {
+        return res.status(502).json({ message: 'Auth service did not return a user id' });
+      }
+    } catch (authErr) {
+      if (authErr.response?.status !== 409) {
+        throw authErr;
+      }
+
+      const existingAuth = await clients.auth.get('/users/by-email', {
+        params: { email: normalizedEmail },
+        headers: forwardAuthHeader(req),
+      });
+      authUserId = existingAuth.data?.user?.id;
+      if (!authUserId) {
+        return res.status(502).json({ message: 'Existing auth user could not be resolved' });
+      }
+    }
+
+    try {
+      const existingDoctor = await clients.doctor.get('/by-email/' + encodeURIComponent(normalizedEmail));
+      if (existingDoctor?.data?.doctor) {
+        return res.status(409).json({ message: 'Doctor profile already exists for this email' });
+      }
+    } catch (doctorLookupErr) {
+      if (doctorLookupErr.response?.status !== 404) {
+        throw doctorLookupErr;
+      }
     }
 
     try {
@@ -148,6 +188,8 @@ exports.createDoctor = async (req, res) => {
         specialty,
         phone: phone || '',
         email: normalizedEmail,
+        experience: Number(experience) || 0,
+        consultationFee: Number(consultationFee) || 0,
         status: 'pending',
         verificationStatus: 'pending',
       });
@@ -158,19 +200,23 @@ exports.createDoctor = async (req, res) => {
         doctor: doctorResponse.data.doctor,
       });
     } catch (doctorErr) {
-      // Best-effort rollback to avoid orphaned auth accounts
-      try {
-        await clients.auth.delete(`/users/${authUserId}`, { headers: forwardAuthHeader(req) });
-      } catch (rollbackErr) {
-        return res.status(502).json({
-          message: 'Doctor profile creation failed and rollback failed',
-          details: doctorErr.response?.data || doctorErr.message,
-          rollback: rollbackErr.response?.data || rollbackErr.message,
-        });
+      // Best-effort rollback to avoid orphaned auth accounts only when we created the auth account here.
+      if (authUserCreatedHere) {
+        try {
+          await clients.auth.delete(`/users/${authUserId}`, { headers: forwardAuthHeader(req) });
+        } catch (rollbackErr) {
+          return res.status(502).json({
+            message: 'Doctor profile creation failed and rollback failed',
+            details: doctorErr.response?.data || doctorErr.message,
+            rollback: rollbackErr.response?.data || rollbackErr.message,
+          });
+        }
       }
 
       return res.status(502).json({
-        message: 'Doctor profile creation failed. Auth account rolled back.',
+        message: authUserCreatedHere
+          ? 'Doctor profile creation failed. Auth account rolled back.'
+          : 'Doctor profile creation failed.',
         details: doctorErr.response?.data || doctorErr.message,
       });
     }
