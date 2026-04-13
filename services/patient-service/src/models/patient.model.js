@@ -5,6 +5,9 @@ const patientSchema = new mongoose.Schema(
     userId: {
       type: String,
       required: true, // links to auth-service user ID
+      unique: true,
+      index: true,
+      trim: true,
     },
     name: {
       type: String,
@@ -15,7 +18,9 @@ const patientSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Email is required'],
       unique: true,
+      index: true,
       lowercase: true,
+      trim: true,
     },
     phone: {
       type: String,

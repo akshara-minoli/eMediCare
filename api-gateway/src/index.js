@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const { createProxyMiddleware, fixRequestBody } = require('http-proxy-middleware');
 require('dotenv').config();
 
 const app = express();
@@ -37,11 +37,10 @@ Object.entries(services).forEach(([route, target]) => {
     createProxyMiddleware({
       target,
       changeOrigin: true,
-      on: {
-        error: (err, req, res) => {
-          console.error(`[Gateway] Proxy error for ${route}:`, err.message);
-          res.status(502).json({ error: 'Service temporarily unavailable' });
-        },
+      onProxyReq: fixRequestBody,
+      onError: (err, req, res) => {
+        console.error(`[Gateway] Proxy error for ${route}:`, err.message);
+        res.status(502).json({ error: 'Service temporarily unavailable' });
       },
     })
   );
@@ -54,7 +53,18 @@ app.use((req, res) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`\n🚀 API Gateway running at http://localhost:${PORT}`);
   console.log(`   Services registered: ${Object.keys(services).length}`);
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use. API Gateway may already be running.`);
+    console.error('   Stop the existing process on 8080, then run npm start again.');
+    process.exit(1);
+  }
+
+  console.error('❌ API Gateway startup error:', err.message);
+  process.exit(1);
 });

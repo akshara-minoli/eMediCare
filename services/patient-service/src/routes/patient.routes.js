@@ -2,6 +2,18 @@ const router = require('express').Router();
 const path = require('path');
 const multer = require('multer');
 const Patient = require('../models/patient.model');
+const {
+  getPatientByUserId,
+  createPatient,
+  updatePatient,
+  addMedicalHistory,
+} = require('../controllers/patient.controller');
+const {
+  validateUserIdParam,
+  validateCreatePatientBody,
+  validateUpdatePatientBody,
+  validateMedicalHistoryBody,
+} = require('../middleware/validate.middleware');
 
 const uploadDir = path.join(__dirname, '../../uploads/patient-reports');
 const storage = multer.diskStorage({
@@ -46,62 +58,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ── GET /api/patients/:userId — Get patient by userId ──────
-router.get('/:userId', async (req, res) => {
-  try {
-    const patient = await Patient.findOne({ userId: req.params.userId });
-    if (!patient) return res.status(404).json({ message: 'Patient profile not found' });
-    res.json({ patient });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
-// ── POST /api/patients — Create patient profile ─────────────
-router.post('/', async (req, res) => {
-  try {
-    const existing = await Patient.findOne({ userId: req.body.userId });
-    if (existing) return res.status(409).json({ message: 'Patient profile already exists' });
-
-    const patient = await Patient.create(req.body);
-    res.status(201).json({ message: 'Patient profile created', patient });
-  } catch (err) {
-    res.status(400).json({ message: 'Validation error', error: err.message });
-  }
-});
-
-// ── PUT /api/patients/:userId — Update patient profile ──────
-router.put('/:userId', async (req, res) => {
-  try {
-    const patient = await Patient.findOneAndUpdate(
-      { userId: req.params.userId },
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!patient) return res.status(404).json({ message: 'Patient not found' });
-    res.json({ message: 'Patient profile updated', patient });
-  } catch (err) {
-    res.status(400).json({ message: 'Update failed', error: err.message });
-  }
-});
-
-// ── PATCH /api/patients/:userId/history — Add medical record
-router.patch('/:userId/history', async (req, res) => {
-  try {
-    const patient = await Patient.findOneAndUpdate(
-      { userId: req.params.userId },
-      { $push: { medicalHistory: req.body } },
-      { new: true }
-    );
-    if (!patient) return res.status(404).json({ message: 'Patient not found' });
-    res.json({ message: 'Medical history updated', patient });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+router.post('/', validateCreatePatientBody, createPatient);
 
 // ── POST /api/patients/:userId/reports — Upload PDF report ─
-router.post('/:userId/reports', (req, res) => {
+router.post('/:userId/reports', validateUserIdParam, (req, res) => {
   upload.single('report')(req, res, async (err) => {
     if (err) {
       const message = err.message || 'Failed to upload report';
@@ -137,7 +97,7 @@ router.post('/:userId/reports', (req, res) => {
 });
 
 // ── GET /api/patients/:userId/reports — List patient reports ─
-router.get('/:userId/reports', async (req, res) => {
+router.get('/:userId/reports', validateUserIdParam, async (req, res) => {
   try {
     const patient = await Patient.findOne({ userId: req.params.userId }).select('reports');
     if (!patient) return res.status(404).json({ message: 'Patient not found' });
@@ -174,5 +134,14 @@ router.delete('/:userId', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
+router.get('/:userId', validateUserIdParam, getPatientByUserId);
+router.put('/:userId', validateUserIdParam, validateUpdatePatientBody, updatePatient);
+router.patch(
+  '/:userId/history',
+  validateUserIdParam,
+  validateMedicalHistoryBody,
+  addMedicalHistory
+);
 
 module.exports = router;

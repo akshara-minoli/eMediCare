@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getPatientReports, uploadPatientReport } from '../services/api';
+import {
+  createPatient,
+  getPatient,
+  getPatientReports,
+  updatePatient,
+  uploadPatientReport,
+} from '../services/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -9,6 +15,12 @@ export default function Dashboard() {
   const [uploading, setUploading] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
   const [reports, setReports] = useState([]);
+  const [profile, setProfile] = useState({ phone: '', bloodGroup: '' });
+  const [medicalHistory, setMedicalHistory] = useState([]);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
+  const [profileError, setProfileError] = useState('');
 
   useEffect(() => {
     const stored = localStorage.getItem('emedicare_user');
@@ -29,6 +41,61 @@ export default function Dashboard() {
 
     loadReports();
   }, [user]);
+
+  useEffect(() => {
+    const loadPatientProfile = async () => {
+      if (!user || user.role !== 'patient') return;
+
+      setProfileLoading(true);
+      setProfileError('');
+      setProfileMessage('');
+      try {
+        const { data } = await getPatient(user.id);
+        setProfile({
+          phone: data?.patient?.phone || '',
+          bloodGroup: data?.patient?.bloodGroup || '',
+        });
+        setMedicalHistory(data?.patient?.medicalHistory || []);
+      } catch (err) {
+        if (err.response?.status === 404) {
+          try {
+            await createPatient({ userId: user.id, name: user.name, email: user.email });
+            setProfile({ phone: '', bloodGroup: '' });
+            setMedicalHistory([]);
+          } catch (createErr) {
+            setProfileError(createErr.response?.data?.message || 'Failed to initialize patient profile.');
+          }
+        } else {
+          setProfileError(err.response?.data?.message || 'Failed to load patient profile.');
+        }
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    loadPatientProfile();
+  }, [user]);
+
+  const handleProfileChange = (e) => {
+    setProfile((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleProfileSave = async (e) => {
+    e.preventDefault();
+    if (!user || user.role !== 'patient') return;
+
+    setProfileSaving(true);
+    setProfileError('');
+    setProfileMessage('');
+    try {
+      await updatePatient(user.id, profile);
+      setProfileMessage('Patient profile updated successfully.');
+    } catch (err) {
+      setProfileError(err.response?.data?.message || 'Failed to update patient profile.');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   const handleReportUpload = async (e) => {
     e.preventDefault();
@@ -70,6 +137,12 @@ export default function Dashboard() {
     { icon: '🤖', label: 'AI Symptom Check',to: '/symptom-checker',  color: 'bg-purple-500/10 border-purple-500/20' },
   ];
 
+  const formatDate = (value) => {
+    if (!value) return 'N/A';
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString();
+  };
+
   return (
     <main className="min-h-screen bg-bg">
       <div className="max-w-6xl mx-auto px-6 py-12">
@@ -105,11 +178,79 @@ export default function Dashboard() {
               <div className="flex justify-between"><span>Email</span><span className="text-white">{user.email}</span></div>
               <div className="flex justify-between"><span>Role</span><span className="text-white capitalize">{user.role}</span></div>
             </div>
+
+            {user.role === 'patient' && (
+              <form onSubmit={handleProfileSave} className="mt-6 space-y-3">
+                <h3 className="font-semibold text-white text-sm">Patient Profile</h3>
+
+                {profileError && <div className="alert-error">{profileError}</div>}
+                {profileMessage && <div className="text-emerald-300 text-xs">{profileMessage}</div>}
+
+                <div>
+                  <label className="form-label">Phone</label>
+                  <input
+                    type="text"
+                    name="phone"
+                    className="form-input"
+                    placeholder="+94770000000"
+                    value={profile.phone}
+                    onChange={handleProfileChange}
+                    disabled={profileLoading || profileSaving}
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label">Blood Group</label>
+                  <select
+                    name="bloodGroup"
+                    className="form-input"
+                    value={profile.bloodGroup}
+                    onChange={handleProfileChange}
+                    disabled={profileLoading || profileSaving}
+                  >
+                    <option value="">Not set</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn-primary text-sm px-4 py-2"
+                  disabled={profileLoading || profileSaving}
+                >
+                  {profileSaving ? 'Saving...' : 'Save Profile'}
+                </button>
+              </form>
+            )}
           </div>
-          <div className="card flex flex-col items-center justify-center text-center gap-3">
-            <span className="text-4xl">📋</span>
-            <p className="text-sm text-white/50">Your medical records and prescriptions will appear here.</p>
-            <Link to="/appointments" className="btn-primary text-sm px-5 py-2">View Appointments</Link>
+          <div className="card">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h2 className="font-heading font-semibold text-lg">Medical History</h2>
+              <Link to="/appointments" className="btn-primary text-xs px-4 py-2">View Appointments</Link>
+            </div>
+
+            {medicalHistory.length === 0 ? (
+              <p className="text-sm text-white/50">No medical history entries yet.</p>
+            ) : (
+              <div className="space-y-3 max-h-[280px] overflow-auto pr-1">
+                {medicalHistory.map((entry) => (
+                  <div key={entry._id || `${entry.condition}-${entry.diagnosedAt}`} className="rounded-xl border border-white/10 p-3 bg-white/5">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-semibold text-white">{entry.condition || 'Condition'}</p>
+                      <span className="text-xs text-white/50">{formatDate(entry.diagnosedAt)}</span>
+                    </div>
+                    {entry.notes ? <p className="text-xs text-white/60 mt-1">{entry.notes}</p> : null}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

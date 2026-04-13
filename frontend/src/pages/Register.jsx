@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { createPatient } from '../services/api';
 
 export default function Register() {
   const [form, setForm]     = useState({ name: '', email: '', password: '', role: 'patient' });
@@ -19,6 +20,22 @@ export default function Register() {
       const { data } = await axios.post('/api/auth/register', { ...form, role: 'patient' });
       localStorage.setItem('emedicare_token', data.token);
       localStorage.setItem('emedicare_user', JSON.stringify(data.user));
+
+      if (data.user?.role === 'patient') {
+        try {
+          await createPatient({
+            userId: data.user.id,
+            name: data.user.name,
+            email: data.user.email,
+          });
+        } catch (profileErr) {
+          // Ignore conflict to support retries and existing profiles.
+          if (profileErr.response?.status !== 409) {
+            throw profileErr;
+          }
+        }
+      }
+
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
