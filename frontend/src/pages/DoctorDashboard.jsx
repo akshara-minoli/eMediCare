@@ -324,8 +324,33 @@ export default function DoctorDashboard() {
   const submitProfile = async (e) => {
     e.preventDefault();
     await runBusy(async () => {
-      const response = await updateMyDoctorProfile(profileForm);
-      setProfile(response.data?.doctor || profile);
+      // Validate form data
+      if (!profileForm.name?.trim()) throw new Error('Name is required');
+      if (!profileForm.specialty?.trim()) throw new Error('Specialty is required');
+      
+      // Submit update with proper number conversion
+      const updatePayload = {
+        name: profileForm.name.trim(),
+        specialty: profileForm.specialty.trim(),
+        phone: profileForm.phone.trim(),
+        experience: profileForm.experience ? Number(profileForm.experience) : 0,
+        consultationFee: profileForm.consultationFee ? Number(profileForm.consultationFee) : 0,
+      };
+      
+      const response = await updateMyDoctorProfile(updatePayload);
+      const updatedDoctor = response.data?.doctor;
+      
+      if (!updatedDoctor) throw new Error('Server did not return updated profile');
+      
+      setProfile(updatedDoctor);
+      setProfileForm({
+        name: updatedDoctor.name || '',
+        specialty: updatedDoctor.specialty || 'General Physician',
+        phone: updatedDoctor.phone || '',
+        experience: updatedDoctor.experience ?? 0,
+        consultationFee: updatedDoctor.consultationFee ?? 0,
+      });
+      
       setSuccess('Profile updated successfully');
       setProfileEditorOpen(false);
     });

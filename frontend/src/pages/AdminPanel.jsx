@@ -243,15 +243,16 @@ export default function AdminPanel() {
     if (!editModal.type || !editModal.id) return;
 
     if (editModal.type === 'doctor') {
-      await withBusy(`edit-doctor-${editModal.id}`, () =>
-        updateDoctorByAdmin(editModal.id, {
+      await withBusy(`edit-doctor-${editModal.id}`, async () => {
+        await updateDoctorByAdmin(editModal.id, {
           name: editModal.fields.name.trim(),
           specialty: editModal.fields.specialty.trim() || 'General Physician',
           phone: editModal.fields.phone.trim(),
           experience: Number(editModal.fields.experience) || 0,
           consultationFee: Number(editModal.fields.consultationFee) || 0,
-        })
-      );
+        });
+        setSuccess(`Doctor updated successfully`);
+      });
     }
 
     if (editModal.type === 'patient') {
