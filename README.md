@@ -258,21 +258,128 @@ cd services/notification-service && npm run dev
 # Terminal 6 — AI Service
 cd services/ai-service && npm run dev
 
-# Terminal 7 — Frontend
+# Terminal 7 — Doctor Service
+cd services/doctor-service && npm run dev
+
+# Terminal 8 — Patient Service
+cd services/patient-service && npm run dev
+
+# Terminal 9 — Telemedicine Service
+cd services/telemedicine-service && npm run dev
+
+# Terminal 10 — Admin Service
+cd services/admin-service && npm run dev
+
+# Terminal 11 — Frontend
 cd frontend && npm run dev
 ```
 
 Access the app at: **http://localhost:5173**
+
+#### Manual Mode URLs
+
+| Component | URL |
+|-----------|-----|
+| Frontend (Vite) | http://localhost:5173 |
+| API Gateway | http://localhost:8080 |
+| Auth Service | http://localhost:5001 |
+| Appointment Service | http://localhost:5002 |
+| Payment Service | http://localhost:5003 |
+| Notification Service | http://localhost:5004 |
+| AI Service | http://localhost:5005 |
+| Doctor Service | http://localhost:5006 |
+| Patient Service | http://localhost:5007 |
+| Telemedicine Service | http://localhost:5008 |
+| Admin Service | http://localhost:5009 |
 
 ---
 
 ### Option B — Run with Docker Compose
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 Access the app at: **http://localhost:3000**
+
+#### Docker Mode URLs
+
+| Component | URL |
+|-----------|-----|
+| Frontend (Nginx) | http://localhost:3000 |
+| API Gateway | http://localhost:8080 |
+| Auth Service | http://localhost:5001 |
+| Appointment Service | http://localhost:5002 |
+| Payment Service | http://localhost:5003 |
+| Notification Service | http://localhost:5004 |
+| AI Service | http://localhost:5005 |
+| Doctor Service | http://localhost:5006 |
+| Patient Service | http://localhost:5007 |
+| Telemedicine Service | http://localhost:5008 |
+| Admin Service | http://localhost:5009 |
+| MongoDB | mongodb://localhost:27017 |
+
+### 🧭 Project Commands (Quick Reference)
+
+Run these commands from the project root:
+
+```bash
+# Start all services (build images if needed)
+docker compose up --build
+
+# Start all services in detached mode
+docker compose up -d --build
+
+# Stop all services
+docker compose down
+
+# Stop all services and remove volumes
+docker compose down -v
+
+# See container status
+docker compose ps
+
+# Follow all logs
+docker compose logs -f
+
+# Follow logs for a specific service
+docker compose logs -f frontend
+docker compose logs -f api-gateway
+docker compose logs -f admin-service
+docker compose logs -f doctor-service
+
+# Restart specific services
+docker compose restart frontend
+docker compose restart api-gateway admin-service doctor-service
+
+# Rebuild and recreate key services
+docker compose up -d --build frontend api-gateway admin-service doctor-service appointment-service patient-service payment-service
+```
+
+### ✅ Health/Validation Commands
+
+```bash
+# Gateway health
+curl http://localhost:8080/health
+
+# Direct service checks
+curl http://localhost:5001/health
+curl http://localhost:5002/health
+curl http://localhost:5006/health
+curl http://localhost:5007/health
+curl http://localhost:5008/health
+curl http://localhost:5009/health
+```
+
+PowerShell-friendly quick data check:
+
+```powershell
+$d=((Invoke-WebRequest -UseBasicParsing http://localhost:5006/api/doctors).Content | ConvertFrom-Json).count
+$a=((Invoke-WebRequest -UseBasicParsing http://localhost:5002/api/appointments).Content | ConvertFrom-Json).appointments.Count
+$p=((Invoke-WebRequest -UseBasicParsing http://localhost:5007/api/patients).Content | ConvertFrom-Json).count
+$pay=((Invoke-WebRequest -UseBasicParsing http://localhost:5003/api/payments).Content | ConvertFrom-Json).count
+Write-Output "doctors=$d appointments=$a patients=$p payments=$pay"
+```
 
 ---
 
