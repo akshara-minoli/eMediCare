@@ -14,11 +14,25 @@ import {
   getMyDoctorProfile,
   getPatients,
   saveDoctorAvailability,
+  updateDoctor,
   updateDoctorAppointmentStatus,
   updateMyDoctorProfile,
 } from '../services/api';
 
 const TABS = ['Profile', 'Availability', 'Appointments', 'Video Consultation', 'Prescriptions', 'Patient Reports'];
+const SPECIALTIES = [
+  'General Physician',
+  'Cardiologist',
+  'Dermatologist',
+  'Neurologist',
+  'Orthopedist',
+  'Pediatrician',
+  'Psychiatrist',
+  'Gynecologist',
+  'Ophthalmologist',
+  'ENT Specialist',
+  'Other',
+];
 
 export default function DoctorDashboard() {
   const navigate = useNavigate();
@@ -204,7 +218,12 @@ export default function DoctorDashboard() {
     try {
       await fn();
     } catch (err) {
-      setError(err.response?.data?.message || 'Operation failed');
+      setError(
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        'Operation failed'
+      );
     } finally {
       setBusy(false);
     }
@@ -327,17 +346,32 @@ export default function DoctorDashboard() {
       // Validate form data
       if (!profileForm.name?.trim()) throw new Error('Name is required');
       if (!profileForm.specialty?.trim()) throw new Error('Specialty is required');
+      if (!SPECIALTIES.includes(profileForm.specialty.trim())) {
+        throw new Error('Please select a valid specialty from the list');
+      }
+
+      const experience = Number(profileForm.experience);
+      const consultationFee = Number(profileForm.consultationFee);
+      if (!Number.isFinite(experience) || experience < 0) {
+        throw new Error('Experience must be a valid non-negative number');
+      }
+      if (!Number.isFinite(consultationFee) || consultationFee < 0) {
+        throw new Error('Consultation fee must be a valid non-negative number');
+      }
       
       // Submit update with proper number conversion
       const updatePayload = {
         name: profileForm.name.trim(),
         specialty: profileForm.specialty.trim(),
-        phone: profileForm.phone.trim(),
-        experience: profileForm.experience ? Number(profileForm.experience) : 0,
-        consultationFee: profileForm.consultationFee ? Number(profileForm.consultationFee) : 0,
+        phone: String(profileForm.phone || '').trim(),
+        experience,
+        consultationFee,
       };
       
-      const response = await updateMyDoctorProfile(updatePayload);
+      if (!profile?._id) throw new Error('Doctor profile is not loaded yet');
+
+      const response = await updateDoctor(profile._id, updatePayload);
+
       const updatedDoctor = response.data?.doctor;
       
       if (!updatedDoctor) throw new Error('Server did not return updated profile');
@@ -935,7 +969,16 @@ export default function DoctorDashboard() {
                 </label>
                 <label className="block">
                   <span className="form-label">Specialty</span>
-                  <input className="form-input" value={profileForm.specialty} onChange={(e) => setProfileForm((p) => ({ ...p, specialty: e.target.value }))} placeholder="Specialty" required />
+                  <select
+                    className="form-input"
+                    value={profileForm.specialty}
+                    onChange={(e) => setProfileForm((p) => ({ ...p, specialty: e.target.value }))}
+                    required
+                  >
+                    {SPECIALTIES.map((item) => (
+                      <option key={item} value={item}>{item}</option>
+                    ))}
+                  </select>
                 </label>
                 <label className="block">
                   <span className="form-label">Phone</span>
