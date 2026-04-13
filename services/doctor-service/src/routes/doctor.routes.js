@@ -62,17 +62,8 @@ async function createDoctorProfileFromAuth(req) {
       return existingByEmail;
     }
 
-    const doctor = await Doctor.create({
-      userId: req.user.id,
-      name: user.name || 'Doctor',
-      email: user.email.toLowerCase(),
-      specialty: 'General Physician',
-      phone: '',
-      status: 'pending',
-      verificationStatus: 'pending',
-    });
-
-    return doctor;
+    // Do not auto-create profiles from auth users; this can resurrect deleted doctors.
+    return null;
   } catch {
     return null;
   }
