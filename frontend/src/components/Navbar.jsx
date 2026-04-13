@@ -1,24 +1,13 @@
 import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const navigate = useNavigate();
-  const token = localStorage.getItem('emedicare_token');
-
-  const handleLogout = () => {
-    localStorage.removeItem('emedicare_token');
-    localStorage.removeItem('emedicare_user');
-    navigate('/login');
-  };
 
   const navLinks = [
-    { to: '/',                label: 'Home' },
-    { to: '/doctors',         label: 'Doctors' },
-    { to: '/appointments',    label: 'Appointments' },
-    { to: '/telemedicine',    label: 'Video Consult' },
-    { to: '/symptom-checker', label: 'AI Checker' },
-    { to: '/admin',           label: 'Admin' },
+    { to: '/',        label: 'Home' },
+    { to: '/about',   label: 'About' },
+    { to: '/contact', label: 'Contact' },
   ];
 
   return (
@@ -52,18 +41,9 @@ export default function Navbar() {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-2">
-          {token ? (
-            <>
-              <Link to="/dashboard" className="btn-outline text-sm px-4 py-2">Dashboard</Link>
-              <button onClick={handleLogout} className="btn-primary text-sm px-4 py-2">Logout</button>
-            </>
-          ) : (
-            <>
-              <Link to="/login"    className="btn-ghost text-sm">Login</Link>
-              <Link to="/register" className="btn-primary text-sm px-4 py-2">Get Started</Link>
-            </>
-          )}
-        </div>
+          <Link to="/login" className="btn-ghost text-sm">Sign In</Link>
+          <Link to="/register" className="btn-primary text-sm px-4 py-2">Get Started</Link>
+          </div>
 
         {/* Hamburger */}
         <button
@@ -91,17 +71,8 @@ export default function Navbar() {
             </NavLink>
           ))}
           <div className="pt-2 border-t border-white/[0.07] flex flex-col gap-2 mt-1">
-            {token ? (
-              <>
-                <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="btn-outline text-sm justify-center">Dashboard</Link>
-                <button onClick={() => { handleLogout(); setMenuOpen(false); }} className="btn-primary text-sm justify-center">Logout</button>
-              </>
-            ) : (
-              <>
-                <Link to="/login"    onClick={() => setMenuOpen(false)} className="btn-ghost text-sm justify-center">Login</Link>
-                <Link to="/register" onClick={() => setMenuOpen(false)} className="btn-primary text-sm justify-center">Get Started</Link>
-              </>
-            )}
+            <Link to="/login" onClick={() => setMenuOpen(false)} className="btn-ghost text-sm justify-center">Sign In</Link>
+            <Link to="/register" onClick={() => setMenuOpen(false)} className="btn-primary text-sm justify-center">Get Started</Link>
           </div>
         </div>
       )}

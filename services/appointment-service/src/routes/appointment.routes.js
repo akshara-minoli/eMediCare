@@ -52,10 +52,25 @@ router.patch('/:id/status', async (req, res) => {
   }
 });
 
+// ── PUT /api/appointments/:id — update appointment ───────────
+router.put('/:id', async (req, res) => {
+  try {
+    const appointment = await Appointment.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
+    res.json({ message: 'Appointment updated', appointment });
+  } catch (err) {
+    res.status(400).json({ message: 'Update failed', error: err.message });
+  }
+});
+
 // ── DELETE /api/appointments/:id ──────────────────────────────
 router.delete('/:id', async (req, res) => {
   try {
-    await Appointment.findByIdAndDelete(req.params.id);
+    const deleted = await Appointment.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: 'Appointment not found' });
     res.json({ message: 'Appointment cancelled' });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });

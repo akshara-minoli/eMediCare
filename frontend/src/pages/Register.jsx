@@ -6,6 +6,7 @@ export default function Register() {
   const [form, setForm]     = useState({ name: '', email: '', password: '', role: 'patient' });
   const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -15,7 +16,7 @@ export default function Register() {
     setError('');
     setLoading(true);
     try {
-      const { data } = await axios.post('/api/auth/register', form);
+      const { data } = await axios.post('/api/auth/register', { ...form, role: 'patient' });
       localStorage.setItem('emedicare_token', data.token);
       localStorage.setItem('emedicare_user', JSON.stringify(data.user));
       navigate('/dashboard');
@@ -27,7 +28,7 @@ export default function Register() {
   };
 
   return (
-    <main className="pt-[72px] min-h-screen bg-gradient-hero flex items-center justify-center px-4">
+    <main className="min-h-screen bg-gradient-hero flex items-center justify-center px-4">
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10 animate-fade-up">
@@ -55,17 +56,20 @@ export default function Register() {
 
             <div>
               <label className="form-label">Password</label>
-              <input id="reg-password" type="password" name="password" placeholder="Min. 6 characters"
-                className="form-input" value={form.password} onChange={handleChange} required minLength={6} />
+              <div className="relative">
+                <input id="reg-password" type={showPassword ? 'text' : 'password'} name="password" placeholder="Min. 6 characters"
+                  className="form-input pr-20" value={form.password} onChange={handleChange} required minLength={6} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/60 hover:text-white transition-colors"
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
 
-            <div>
-              <label className="form-label">Register as</label>
-              <select id="reg-role" name="role" className="form-input" value={form.role} onChange={handleChange}>
-                <option value="patient">Patient</option>
-                <option value="doctor">Doctor</option>
-              </select>
-            </div>
+            <p className="text-xs text-white/45">New accounts are registered as patient users.</p>
 
             <button id="reg-submit" type="submit" disabled={loading}
               className="btn-primary w-full justify-center py-3 text-base disabled:opacity-60 disabled:cursor-not-allowed">

@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -9,22 +9,49 @@ import Appointments from './pages/Appointments';
 import Telemedicine from './pages/Telemedicine';
 import SymptomChecker from './pages/SymptomChecker';
 import AdminPanel from './pages/AdminPanel';
+import DoctorDashboard from './pages/DoctorDashboard';
+import PatientDashboard from './pages/PatientDashboard';
+import About from './pages/About';
+import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
+  const { pathname } = useLocation();
+  const showNavbar = pathname === '/';
+
   return (
     <>
-      <Navbar />
+      {showNavbar && <Navbar />}
       <Routes>
         <Route path="/"                  element={<Home />} />
         <Route path="/login"             element={<Login />} />
         <Route path="/register"          element={<Register />} />
         <Route path="/dashboard"         element={<Dashboard />} />
+        <Route path="/doctor-dashboard"  element={<DoctorDashboard />} />
+        <Route path="/patient-dashboard" element={<PatientDashboard />} />
         <Route path="/doctors"           element={<Doctors />} />
         <Route path="/appointments"      element={<Appointments />} />
         <Route path="/telemedicine"      element={<Telemedicine />} />
         <Route path="/symptom-checker"   element={<SymptomChecker />} />
-        <Route path="/admin"             element={<AdminPanel />} />
+        <Route
+          path="/admin-dashboard"
+          element={
+            <ProtectedRoute role="admin">
+              <AdminPanel />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute role="admin">
+              <AdminPanel />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/about"             element={<About />} />
+        <Route path="/contact"           element={<Contact />} />
         <Route path="*"                  element={<NotFound />} />
       </Routes>
     </>
