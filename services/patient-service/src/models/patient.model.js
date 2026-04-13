@@ -48,6 +48,16 @@ const patientSchema = new mongoose.Schema(
         notes:      { type: String },
       },
     ],
+    reports: [
+      {
+        originalName: { type: String, required: true },
+        fileName: { type: String, required: true },
+        fileUrl: { type: String, required: true },
+        mimeType: { type: String, default: 'application/pdf' },
+        size: { type: Number, default: 0 },
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
     allergies: [{ type: String }],
     currentMedications: [{ type: String }],
     emergencyContact: {

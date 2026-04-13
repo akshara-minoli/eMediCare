@@ -58,11 +58,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Features ── */}
-      <section className="py-24">
+      {/* ── Features / About ── */}
+      <section id="about-section" className="py-24 scroll-mt-24">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
-            <div className="section-tag mx-auto w-fit mb-4">Everything You Need</div>
+            <div className="section-tag mx-auto w-fit mb-4">About eMediCare</div>
             <h2 className="text-4xl font-heading font-bold">Healthcare at your fingertips</h2>
             <p className="text-white/50 mt-3 max-w-xl mx-auto">All the tools you need to manage your health in one place.</p>
           </div>
@@ -79,12 +79,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section className="py-20 mx-6 mb-16 rounded-3xl bg-gradient-primary relative overflow-hidden">
+      {/* ── CTA / Contact ── */}
+      <section id="contact-section" className="py-20 mx-6 mb-16 rounded-3xl bg-gradient-primary relative overflow-hidden scroll-mt-24">
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative z-10 text-center px-6">
           <h2 className="text-4xl font-heading font-bold mb-4">Ready to take charge of your health?</h2>
-          <p className="text-white/80 mb-8 max-w-lg mx-auto">Join thousands of patients already using eMediCare for smarter healthcare.</p>
+          <p className="text-white/80 mb-4 max-w-lg mx-auto">Join thousands of patients already using eMediCare for smarter healthcare.</p>
+          <p className="text-white/85 mb-8 text-sm">Contact: support@emedicare.com · +94 11 234 5678</p>
           <Link to="/register" className="inline-flex items-center gap-2 px-8 py-3 bg-white text-primary font-bold rounded-full text-base hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
             Create Free Account →
           </Link>

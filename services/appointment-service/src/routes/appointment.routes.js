@@ -52,6 +52,22 @@ router.patch('/:id/status', async (req, res) => {
   }
 });
 
+// ── PUT /api/appointments/:id/status — alias for integrations ─
+router.put('/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const appointment = await Appointment.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
+    res.json({ message: 'Status updated', appointment });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 // ── PUT /api/appointments/:id — update appointment ───────────
 router.put('/:id', async (req, res) => {
   try {

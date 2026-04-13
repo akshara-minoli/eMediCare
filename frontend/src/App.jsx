@@ -2,7 +2,9 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
 import Register from './pages/Register';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Doctors from './pages/Doctors';
 import Appointments from './pages/Appointments';
@@ -26,9 +28,18 @@ function App() {
       <Routes>
         <Route path="/"                  element={<Home />} />
         <Route path="/login"             element={<Login />} />
+        <Route path="/forgot-password"   element={<ForgotPassword />} />
         <Route path="/register"          element={<Register />} />
+        <Route path="/reset-password"    element={<ResetPassword />} />
         <Route path="/dashboard"         element={<Dashboard />} />
-        <Route path="/doctor-dashboard"  element={<DoctorDashboard />} />
+        <Route
+          path="/doctor-dashboard"
+          element={
+            <ProtectedRoute role="doctor">
+              <DoctorDashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/patient-dashboard" element={<PatientDashboard />} />
         <Route path="/doctors"           element={<Doctors />} />
         <Route path="/appointments"      element={<Appointments />} />

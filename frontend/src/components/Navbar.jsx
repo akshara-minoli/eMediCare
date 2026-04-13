@@ -4,11 +4,12 @@ import { Link, NavLink } from 'react-router-dom';
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const navLinks = [
-    { to: '/',        label: 'Home' },
-    { to: '/about',   label: 'About' },
-    { to: '/contact', label: 'Contact' },
-  ];
+  const scrollToSection = (sectionId) => {
+    const el = document.getElementById(sectionId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setMenuOpen(false);
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-[72px] bg-bg/85 backdrop-blur-xl border-b border-white/[0.07]">
@@ -22,21 +23,32 @@ export default function Navbar() {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map(({ to, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'text-primary bg-primary/10'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              `px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                isActive
+                  ? 'text-primary bg-primary/10'
+                  : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`
+            }
+          >
+            Home
+          </NavLink>
+          <button
+            type="button"
+            onClick={() => scrollToSection('about-section')}
+            className="px-4 py-1.5 rounded-full text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
+          >
+            About
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToSection('contact-section')}
+            className="px-4 py-1.5 rounded-full text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
+          >
+            Contact
+          </button>
         </nav>
 
         {/* Desktop Actions */}
@@ -60,16 +72,27 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="md:hidden flex flex-col gap-1 px-6 py-4 bg-bg-2 border-t border-white/[0.07] animate-fade-up">
-          {navLinks.map(({ to, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              onClick={() => setMenuOpen(false)}
-              className="px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all"
-            >
-              {label}
-            </NavLink>
-          ))}
+          <NavLink
+            to="/"
+            onClick={() => setMenuOpen(false)}
+            className="px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all"
+          >
+            Home
+          </NavLink>
+          <button
+            type="button"
+            onClick={() => scrollToSection('about-section')}
+            className="text-left px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all"
+          >
+            About
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToSection('contact-section')}
+            className="text-left px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all"
+          >
+            Contact
+          </button>
           <div className="pt-2 border-t border-white/[0.07] flex flex-col gap-2 mt-1">
             <Link to="/login" onClick={() => setMenuOpen(false)} className="btn-ghost text-sm justify-center">Sign In</Link>
             <Link to="/register" onClick={() => setMenuOpen(false)} className="btn-primary text-sm justify-center">Get Started</Link>
