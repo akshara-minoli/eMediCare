@@ -116,7 +116,7 @@ router.put('/me', doctorAuth, async (req, res) => {
     if (!doctor) return res.status(404).json({ message: 'Doctor profile not found' });
     res.json({ message: 'Doctor profile updated', doctor });
   } catch (err) {
-    res.status(400).json({ message: 'Update failed', error: err.message });
+    res.status(400).json({ message: err.message || 'Update failed', error: err.message });
   }
 });
 
