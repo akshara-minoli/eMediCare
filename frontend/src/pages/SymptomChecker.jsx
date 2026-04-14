@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import { checkSymptoms } from '../services/api';
 
 const SYMPTOM_SUGGESTIONS = [
   'fever', 'headache', 'cough', 'fatigue', 'chest pain',
@@ -25,7 +25,7 @@ export default function SymptomChecker() {
     if (!symptoms.length) { setError('Please add at least one symptom.'); return; }
     setError(''); setResult(null); setLoading(true);
     try {
-      const { data } = await axios.post('/api/ai/symptom-check', { symptoms });
+      const { data } = await checkSymptoms(symptoms);
       setResult(data);
     } catch (err) {
       setError(err.response?.data?.message || 'Analysis failed. Please try again.');
@@ -94,14 +94,37 @@ export default function SymptomChecker() {
           <div className="card border-primary/20 animate-fade-up">
             <h2 className="font-heading font-bold text-lg mb-4">Analysis Result</h2>
             <div className="space-y-4">
+              {result.triage && (
+                <div>
+                  <p className="text-xs text-white/40 uppercase tracking-wider mb-2">Triage Level</p>
+                  <span className={`badge capitalize ${result.triage.level === 'emergency' ? 'badge-red' : result.triage.level === 'urgent' ? 'badge-amber' : 'badge-green'}`}>
+                    {result.triage.level}
+                  </span>
+                  <p className="text-xs text-white/50 mt-2">{result.triage.reason}</p>
+                </div>
+              )}
+
               <div>
                 <p className="text-xs text-white/40 uppercase tracking-wider mb-2">Possible Conditions</p>
                 <div className="flex flex-wrap gap-2">
-                  {result.possibleConditions.map((c) => (
-                    <span key={c} className="badge badge-amber">{c}</span>
-                  ))}
+                  {(result.likelyConditions?.length ? result.likelyConditions : result.possibleConditions || []).map((item) => {
+                    const label = typeof item === 'string' ? item : `${item.condition} (${item.confidence}%)`;
+                    return <span key={label} className="badge badge-amber">{label}</span>;
+                  })}
                 </div>
               </div>
+
+              {Array.isArray(result.nextActions) && result.nextActions.length > 0 && (
+                <div>
+                  <p className="text-xs text-white/40 uppercase tracking-wider mb-2">Next Actions</p>
+                  <div className="space-y-1 text-xs text-white/70">
+                    {result.nextActions.map((action) => (
+                      <p key={action}>• {action}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="alert-info text-xs">{result.recommendation}</div>
               <div className="alert-error text-xs">⚠️ {result.disclaimer}</div>
             </div>

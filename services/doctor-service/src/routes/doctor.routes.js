@@ -285,10 +285,9 @@ router.get('/telemedicine/:appointmentId', doctorAuth, async (req, res) => {
       type: 'video',
     });
 
-    const roomId = sessionResponse.data?.session?.roomId;
-    const meetingLink = roomId
-      ? `https://meet.jit.si/eMediCare-${roomId}`
-      : `https://meet.jit.si/eMediCare-${appointment._id}`;
+    const meetingLink = sessionResponse.data?.session?.joinUrl
+      || sessionResponse.data?.joinUrl
+      || `https://meet.jit.si/eMediCare-${appointment._id}`;
 
     res.json({
       message: 'Telemedicine session ready',

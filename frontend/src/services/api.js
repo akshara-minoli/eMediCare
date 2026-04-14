@@ -58,6 +58,7 @@ export const getPaymentHistory = (patientId) => API.get(`/payments/${patientId}`
 
 /* ── AI ───────────────────────────────────────── */
 export const checkSymptoms = (symptoms) => API.post('/ai/symptom-check', { symptoms });
+export const getAISymptomCatalog = () => API.get('/ai/symptoms');
 
 /* ── Notifications ────────────────────────────── */
 export const sendNotification = (data) => API.post('/notifications/send', data);
