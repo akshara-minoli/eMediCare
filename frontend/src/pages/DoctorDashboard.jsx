@@ -57,6 +57,11 @@ export default function DoctorDashboard() {
   const [prescriptionForm, setPrescriptionForm] = useState({ patientId: '', diagnosis: '', medicines: '', notes: '' });
   const [reportPatientId, setReportPatientId] = useState('');
   const [selectedAppointmentId, setSelectedAppointmentId] = useState('');
+  const [cancelAvailabilityForm, setCancelAvailabilityForm] = useState({
+    open: false,
+    availabilityId: '',
+    message: '',
+  });
 
   const normalizeTo24HourSlot = (slot) => {
     const value = (slot || '').trim();
@@ -414,17 +419,37 @@ export default function DoctorDashboard() {
     });
   };
 
-  const cancelAvailabilityWithMessage = async (availabilityId) => {
-    const message = window.prompt('Enter cancellation message for patients:');
-    if (!message || !message.trim()) {
+  const openCancelAvailabilityForm = (availabilityId) => {
+    setCancelAvailabilityForm({
+      open: true,
+      availabilityId,
+      message: '',
+    });
+  };
+
+  const closeCancelAvailabilityForm = () => {
+    setCancelAvailabilityForm({
+      open: false,
+      availabilityId: '',
+      message: '',
+    });
+  };
+
+  const submitCancelAvailability = async (e) => {
+    e.preventDefault();
+    if (!cancelAvailabilityForm.message.trim()) {
       setError('Cancellation message is required');
       return;
     }
 
     await runBusy(async () => {
-      const response = await cancelDoctorAvailability(availabilityId, message.trim());
+      const response = await cancelDoctorAvailability(
+        cancelAvailabilityForm.availabilityId,
+        cancelAvailabilityForm.message.trim()
+      );
       await loadAvailability();
       setSuccess(response.data?.message || 'Availability cancelled');
+      closeCancelAvailabilityForm();
     });
   };
 
@@ -684,7 +709,7 @@ export default function DoctorDashboard() {
                     <button
                       type="button"
                       disabled={busy}
-                      onClick={() => cancelAvailabilityWithMessage(item._id)}
+                      onClick={() => openCancelAvailabilityForm(item._id)}
                       className="mt-2 text-red-300 hover:text-red-100"
                     >
                       Cancel Availability
@@ -944,6 +969,52 @@ export default function DoctorDashboard() {
               </div>
             )}
           </section>
+        )}
+
+        {cancelAvailabilityForm.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+            <div className="w-full max-w-lg card">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-heading text-xl">Cancel Availability</h2>
+                <button
+                  type="button"
+                  className="text-white/60 hover:text-white"
+                  onClick={closeCancelAvailabilityForm}
+                >
+                  Close
+                </button>
+              </div>
+
+              <form onSubmit={submitCancelAvailability} className="space-y-3">
+                <label className="block">
+                  <span className="form-label">Message for patients</span>
+                  <textarea
+                    className="form-input min-h-24"
+                    value={cancelAvailabilityForm.message}
+                    onChange={(e) =>
+                      setCancelAvailabilityForm((prev) => ({ ...prev, message: e.target.value }))
+                    }
+                    placeholder="Enter cancellation reason"
+                    required
+                  />
+                </label>
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    className="btn-outline"
+                    onClick={closeCancelAvailabilityForm}
+                    disabled={busy}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-primary" disabled={busy}>
+                    {busy ? 'Submitting...' : 'Confirm Cancellation'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
 
         {profileEditorOpen && (
