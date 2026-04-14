@@ -138,7 +138,7 @@ services:
   doctor-service:
     build:
       context: ./services/doctor-service
-      dockerfile: ../../docker/services.Dockerfile
+      dockerfile: ../../docker/doctor-service.Dockerfile
     env_file:
       - ./services/doctor-service/.env
     ports:
@@ -196,7 +196,7 @@ services:
   admin-service:
     build:
       context: ./services/admin-service
-      dockerfile: ../../docker/services.Dockerfile
+      dockerfile: ../../docker/admin-service.Dockerfile
     env_file:
       - ./services/admin-service/.env
     ports:
