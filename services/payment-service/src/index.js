@@ -32,7 +32,11 @@ app.use(express.json());
 
 // ── Database ──────────────────────────────────────────────────
 mongoose
-  .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/emedicare_payments')
+  .connect(
+    process.env.PAYMENTS_DB_URI
+      || process.env.MONGO_URI
+      || 'mongodb://localhost:27017/emedicare_payments'
+  )
   .then(() => console.log('✅ [Payment Service] MongoDB connected'))
   .catch((err) => console.error('❌ MongoDB connection error:', err));
 
