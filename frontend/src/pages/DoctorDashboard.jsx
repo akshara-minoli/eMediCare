@@ -145,7 +145,10 @@ export default function DoctorDashboard() {
 
   const doctorAvailabilityCount = availability.length;
   const doctorPrescriptionCount = prescriptions.length;
-  const doctorAppointmentCount = appointments.length;
+  const doctorAppointmentCount = useMemo(
+    () => appointments.filter((item) => ['confirmed', 'completed'].includes(item.status)).length,
+    [appointments]
+  );
 
   const timeOptions = useMemo(
     () => Array.from({ length: 24 }, (_, hour) => `${String(hour).padStart(2, '0')}:00`),
@@ -176,8 +179,6 @@ export default function DoctorDashboard() {
     () => appointments.find((item) => item._id === selectedAppointmentId) || null,
     [appointments, selectedAppointmentId]
   );
-
-  const totalAppointmentsCount = appointments.length;
 
   const getDateKey = (value) => {
     if (!value) return null;

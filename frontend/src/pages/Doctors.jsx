@@ -277,7 +277,7 @@ export default function Doctors() {
                     type="button"
                   >
                     Book
-                  </Link>
+                  </button>
                 </div>
               </div>
             ))}

@@ -83,10 +83,26 @@ exports.getPendingDoctors = async (req, res) => {
 
 exports.updateDoctorStatus = async (req, res) => {
   try {
-    const response = await clients.doctor.put(`/${req.params.id}/status`, {
-      status: req.body.status,
-    });
-    res.json(response.data);
+    const status = String(req.body.status || '').trim().toLowerCase();
+
+    if (status === 'rejected') {
+      const doctorRes = await clients.doctor.get(`/${req.params.id}`);
+      const doctor = doctorRes.data?.doctor;
+      if (!doctor) {
+        return res.status(404).json({ message: 'Doctor not found' });
+      }
+
+      const authUserId = doctor.userId;
+      if (authUserId) {
+        await clients.auth.delete(`/users/${authUserId}`, { headers: forwardAuthHeader(req) });
+      }
+
+      await clients.doctor.delete(`/${req.params.id}`);
+      return res.json({ message: 'Doctor rejected and removed successfully' });
+    }
+
+    const response = await clients.doctor.put(`/${req.params.id}/status`, { status });
+    return res.json(response.data);
   } catch (err) {
     handleError(res, err, 'Failed to update doctor status');
   }
