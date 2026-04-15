@@ -54,7 +54,11 @@ export const cancelAppt = (id) => API.delete(`/appointments/${id}`);
 
 /* ── Payments ─────────────────────────────────── */
 export const makePayment = (data) => API.post('/payments/pay', data);
-export const getPaymentHistory = (patientId) => API.get(`/payments/${patientId}`);
+export const getPaymentHistory = (patientId) => API.get(`/payments/patient/${patientId}`);
+export const createStripeCheckoutSession = (data) => API.post('/payments/create-checkout-session', data);
+export const confirmPaymentSuccess = (sessionId) => API.post('/payments/confirm-success', { sessionId });
+export const getPaymentByAppointment = (appointmentId) => API.get(`/payments/appointment/${appointmentId}`);
+
 
 /* ── AI ───────────────────────────────────────── */
 export const checkSymptoms = (symptoms) => API.post('/ai/symptom-check', { symptoms });

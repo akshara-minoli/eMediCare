@@ -17,6 +17,7 @@ import {
   updateDoctor,
   updateDoctorAppointmentStatus,
   updateMyDoctorProfile,
+  getPaymentByAppointment,
 } from '../services/api';
 
 const TABS = ['Profile', 'Availability', 'Appointments', 'Video Consultation', 'Prescriptions', 'Patient Reports'];
@@ -51,6 +52,7 @@ export default function DoctorDashboard() {
   const [patients, setPatients] = useState([]);
   const [patientReport, setPatientReport] = useState(null);
   const [meetingLink, setMeetingLink] = useState('');
+  const [apptPaymentMap, setApptPaymentMap] = useState({}); // appointmentId -> true|false
 
   const [profileForm, setProfileForm] = useState({ name: '', specialty: '', phone: '', experience: '', consultationFee: '' });
   const [availabilityForm, setAvailabilityForm] = useState({ date: '', fromTime: '', toTime: '' });
@@ -294,6 +296,16 @@ export default function DoctorDashboard() {
     if (!selectedAppointmentId && data.length > 0) {
       setSelectedAppointmentId(data[0]._id);
     }
+    // Load payment statuses for all appointments
+    const results = await Promise.allSettled(
+      data.map((a) => getPaymentByAppointment(a._id))
+    );
+    const pm = {};
+    data.forEach((a, i) => {
+      const r = results[i];
+      pm[a._id] = r.status === 'fulfilled' && !!r.value.data?.payment;
+    });
+    setApptPaymentMap(pm);
   };
 
   const loadPatients = async () => {
@@ -816,13 +828,14 @@ export default function DoctorDashboard() {
                       <th className="text-left py-2 pr-3">Type</th>
                       <th className="text-left py-2 pr-3">Notes</th>
                       <th className="text-left py-2 pr-3">Status</th>
+                      <th className="text-left py-2 pr-3">Payment Status</th>
                       <th className="text-left py-2 pr-3">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {acceptedAppointments.length === 0 && (
                       <tr>
-                        <td className="py-3 text-white/50" colSpan={7}>No accepted appointments found.</td>
+                        <td className="py-3 text-white/50" colSpan={8}>No accepted appointments found.</td>
                       </tr>
                     )}
                     {acceptedAppointments.map((item) => (
@@ -833,6 +846,18 @@ export default function DoctorDashboard() {
                         <td className="py-2 pr-3 capitalize">{item.type || 'in-person'}</td>
                         <td className="py-2 pr-3">{item.notes || '-'}</td>
                         <td className="py-2 pr-3 capitalize">{item.status}</td>
+                        <td className="py-2 pr-3">
+                          {apptPaymentMap[item._id] ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-400/25">
+                              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                              Paid
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/40 border border-white/15">
+                              Unpaid
+                            </span>
+                          )}
+                        </td>
                         <td className="py-2 pr-3">
                           {item.status === 'confirmed' ? (
                             <button
@@ -865,13 +890,14 @@ export default function DoctorDashboard() {
                       <th className="text-left py-2 pr-3">Type</th>
                       <th className="text-left py-2 pr-3">Notes</th>
                       <th className="text-left py-2 pr-3">Status</th>
+                      <th className="text-left py-2 pr-3">Payment Status</th>
                       <th className="text-left py-2 pr-3">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {requestAppointments.length === 0 && (
                       <tr>
-                        <td className="py-3 text-white/50" colSpan={7}>No pending appointment requests found.</td>
+                        <td className="py-3 text-white/50" colSpan={8}>No pending appointment requests found.</td>
                       </tr>
                     )}
                     {requestAppointments.map((item) => (
@@ -882,6 +908,18 @@ export default function DoctorDashboard() {
                         <td className="py-2 pr-3 capitalize">{item.type || 'in-person'}</td>
                         <td className="py-2 pr-3">{item.notes || '-'}</td>
                         <td className="py-2 pr-3 capitalize">{item.status}</td>
+                        <td className="py-2 pr-3">
+                          {apptPaymentMap[item._id] ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-400/25">
+                              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                              Paid
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/40 border border-white/15">
+                              Unpaid
+                            </span>
+                          )}
+                        </td>
                         <td className="py-2 pr-3 space-x-3">
                           <button className="text-emerald-300 hover:text-emerald-100" disabled={busy} onClick={() => changeAppointmentStatus(item._id, 'confirmed')}>Accept</button>
                           <button className="text-red-300 hover:text-red-100" disabled={busy} onClick={() => changeAppointmentStatus(item._id, 'rejected')}>Reject</button>
