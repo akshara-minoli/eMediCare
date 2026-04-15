@@ -42,6 +42,7 @@ export default function AdminPanel() {
   const [success, setSuccess] = useState('');
   const [loadWarning, setLoadWarning] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeView, setActiveView] = useState('overview');
   const [showDoctorPassword, setShowDoctorPassword] = useState(false);
 
   const [overview, setOverview] = useState({ doctors: 0, patients: 0, appointments: 0, payments: 0 });
@@ -72,6 +73,49 @@ export default function AdminPanel() {
     [doctors]
   );
 
+  const doctorNameMap = useMemo(
+    () => new Map(
+      doctors.flatMap((doc) => [
+        [String(doc._id), doc.name || String(doc._id)],
+        [String(doc.userId), doc.name || String(doc.userId)],
+      ])
+    ),
+    [doctors]
+  );
+
+  const patientNameMap = useMemo(
+    () => new Map(
+      patients.flatMap((patient) => [
+        [String(patient.userId), patient.name || String(patient.userId)],
+        [String(patient._id), patient.name || String(patient._id)],
+      ])
+    ),
+    [patients]
+  );
+
+  const appointmentLabelMap = useMemo(
+    () => new Map(
+      appointments.map((item) => {
+        const doctorName = doctorNameMap.get(String(item.doctorId)) || item.doctorId || 'Unknown doctor';
+        const patientName = patientNameMap.get(String(item.patientId)) || item.patientId || 'Unknown patient';
+        const dateLabel = item.date ? new Date(item.date).toLocaleDateString() : '-';
+        const timeLabel = item.time || '';
+        return [String(item._id), `${doctorName} - ${patientName} (${dateLabel} ${timeLabel})`.trim()];
+      })
+    ),
+    [appointments, doctorNameMap, patientNameMap]
+  );
+
+  const dateToInputValue = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const adminUser = useMemo(() => {
     try {
       const raw = localStorage.getItem('emedicare_user');
@@ -81,13 +125,13 @@ export default function AdminPanel() {
     }
   }, []);
 
-  const jumpTo = (id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setSidebarOpen(false);
-    }
+  const openView = (view) => {
+    setActiveView(view);
+    setSidebarOpen(false);
   };
+
+  const navButtonClass = (view) =>
+    `btn-outline w-full justify-start ${activeView === view ? 'bg-primary/15 text-primary border-primary/30' : ''}`;
 
   const handleLogout = () => {
     localStorage.removeItem('emedicare_token');
@@ -221,6 +265,8 @@ export default function AdminPanel() {
       title: 'Edit Appointment',
       fields: {
         status: appointment.status || 'pending',
+        date: dateToInputValue(appointment.date),
+        time: appointment.time || '',
       },
     });
   };
@@ -270,6 +316,8 @@ export default function AdminPanel() {
       await withBusy(`edit-appointment-${editModal.id}`, () =>
         updateAppointmentByAdmin(editModal.id, {
           status: editModal.fields.status.trim().toLowerCase(),
+          date: editModal.fields.date,
+          time: editModal.fields.time.trim(),
         })
       );
     }
@@ -332,8 +380,8 @@ export default function AdminPanel() {
   const exportAppointmentsPdf = () => {
     const rows = appointments.map((item) => [
       item._id || '-',
-      item.doctorId || '-',
-      item.patientId || '-',
+      doctorNameMap.get(String(item.doctorId)) || item.doctorId || '-',
+      patientNameMap.get(String(item.patientId)) || item.patientId || '-',
       `${new Date(item.date).toLocaleDateString()} ${item.time || ''}`.trim(),
       item.type || 'in-person',
       item.status || '-',
@@ -345,8 +393,8 @@ export default function AdminPanel() {
     const rows = payments.map((item) => [
       item._id || '-',
       item.transactionId || 'N/A',
-      item.patientId || '-',
-      item.appointmentId || '-',
+      patientNameMap.get(String(item.patientId)) || item.patientId || '-',
+      appointmentLabelMap.get(String(item.appointmentId)) || item.appointmentId || '-',
       String(item.amount ?? '-'),
       item.method || '-',
       item.status || '-',
@@ -391,11 +439,11 @@ export default function AdminPanel() {
             </div>
 
             <nav className="mt-6 space-y-2">
-              <button type="button" onClick={() => jumpTo('overview-section')} className="btn-outline w-full justify-start">Overview</button>
-              <button type="button" onClick={() => jumpTo('doctors-section')} className="btn-outline w-full justify-start">Doctors</button>
-              <button type="button" onClick={() => jumpTo('patients-section')} className="btn-outline w-full justify-start">Patients</button>
-              <button type="button" onClick={() => jumpTo('appointments-section')} className="btn-outline w-full justify-start">Appointments</button>
-              <button type="button" onClick={() => jumpTo('payments-section')} className="btn-outline w-full justify-start">Payments</button>
+              <button type="button" onClick={() => openView('overview')} className={navButtonClass('overview')}>Overview</button>
+              <button type="button" onClick={() => openView('doctors')} className={navButtonClass('doctors')}>Doctors</button>
+              <button type="button" onClick={() => openView('patients')} className={navButtonClass('patients')}>Patients</button>
+              <button type="button" onClick={() => openView('appointments')} className={navButtonClass('appointments')}>Appointments</button>
+              <button type="button" onClick={() => openView('payments')} className={navButtonClass('payments')}>Payments</button>
             </nav>
 
             <div className="mt-auto pt-6 border-t border-white/10">
@@ -430,13 +478,16 @@ export default function AdminPanel() {
           </div>
         )}
 
-        <section id="overview-section" className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {activeView === 'overview' && (
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard label="Doctors" value={overview.doctors} />
           <StatCard label="Patients" value={overview.patients} />
           <StatCard label="Appointments" value={overview.appointments} />
           <StatCard label="Payments" value={overview.payments} />
         </section>
+        )}
 
+        {activeView === 'overview' && (
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="card">
             <h2 className="font-heading text-xl mb-4">Create Doctor Account</h2>
@@ -545,8 +596,10 @@ export default function AdminPanel() {
             </div>
           </div>
         </section>
+        )}
 
-        <section id="doctors-section" className="card">
+        {activeView === 'doctors' && (
+        <section className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-xl">Doctor Management</h2>
             <button type="button" className="btn-outline" onClick={exportDoctorsPdf}>Export PDF</button>
@@ -597,8 +650,10 @@ export default function AdminPanel() {
             </table>
           </div>
         </section>
+        )}
 
-        <section id="patients-section" className="card">
+        {activeView === 'patients' && (
+        <section className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-xl">Patient Management</h2>
             <button type="button" className="btn-outline" onClick={exportPatientsPdf}>Export PDF</button>
@@ -643,8 +698,10 @@ export default function AdminPanel() {
             </table>
           </div>
         </section>
+        )}
 
-        <section id="appointments-section" className="card">
+        {activeView === 'appointments' && (
+        <section className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-xl">Appointment Management</h2>
             <button type="button" className="btn-outline" onClick={exportAppointmentsPdf}>Export PDF</button>
@@ -669,8 +726,8 @@ export default function AdminPanel() {
                 {appointments.map((item) => (
                   <tr key={item._id} className="border-b border-white/5">
                     <td className="py-2 pr-3">{new Date(item.date).toLocaleDateString()} {item.time}</td>
-                    <td className="py-2 pr-3">{item.doctorId}</td>
-                    <td className="py-2 pr-3">{item.patientId}</td>
+                    <td className="py-2 pr-3">{doctorNameMap.get(String(item.doctorId)) || item.doctorId}</td>
+                    <td className="py-2 pr-3">{patientNameMap.get(String(item.patientId)) || item.patientId}</td>
                     <td className="py-2 pr-3 capitalize">{item.status}</td>
                     <td className="py-2 pr-3 space-x-3">
                       <button
@@ -698,8 +755,10 @@ export default function AdminPanel() {
             </table>
           </div>
         </section>
+        )}
 
-        <section id="payments-section" className="card">
+        {activeView === 'payments' && (
+        <section className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-xl">Payment Management</h2>
             <button type="button" className="btn-outline" onClick={exportPaymentsPdf}>Export PDF</button>
@@ -725,8 +784,8 @@ export default function AdminPanel() {
                 {payments.map((item) => (
                   <tr key={item._id} className="border-b border-white/5">
                     <td className="py-2 pr-3">{item.transactionId || 'N/A'}</td>
-                    <td className="py-2 pr-3">{item.patientId}</td>
-                    <td className="py-2 pr-3">{item.appointmentId}</td>
+                    <td className="py-2 pr-3">{patientNameMap.get(String(item.patientId)) || item.patientId}</td>
+                    <td className="py-2 pr-3">{appointmentLabelMap.get(String(item.appointmentId)) || item.appointmentId}</td>
                     <td className="py-2 pr-3">${item.amount} ({item.method})</td>
                     <td className="py-2 pr-3 capitalize">{item.status}</td>
                     <td className="py-2 pr-3 space-x-3">
@@ -755,6 +814,7 @@ export default function AdminPanel() {
             </table>
           </div>
         </section>
+        )}
 
         {editModal.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
@@ -850,16 +910,41 @@ export default function AdminPanel() {
                 )}
 
                 {editModal.type === 'appointment' && (
-                  <select
-                    className="form-input md:col-span-2"
-                    value={editModal.fields.status || 'pending'}
-                    onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, status: e.target.value } }))}
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
+                  <>
+                    <label className="block">
+                      <span className="form-label">Date</span>
+                      <input
+                        className="form-input"
+                        type="date"
+                        value={editModal.fields.date || ''}
+                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, date: e.target.value } }))}
+                        required
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="form-label">Time</span>
+                      <input
+                        className="form-input"
+                        value={editModal.fields.time || ''}
+                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, time: e.target.value } }))}
+                        placeholder="e.g. 10:00 or 10:00-11:00"
+                        required
+                      />
+                    </label>
+                    <label className="block md:col-span-2">
+                      <span className="form-label">Status</span>
+                      <select
+                        className="form-input"
+                        value={editModal.fields.status || 'pending'}
+                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, status: e.target.value } }))}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </label>
+                  </>
                 )}
 
                 {editModal.type === 'payment' && (
