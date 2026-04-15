@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { bookAppointment } from '../services/api';
 
 function formatSlot24Hour(slot) {
   const value = (slot || '').trim();
@@ -39,11 +40,22 @@ const PLACEHOLDER_DOCTORS = [
 ];
 
 export default function Doctors() {
+  const navigate = useNavigate();
   const [doctors, setDoctors]       = useState(PLACEHOLDER_DOCTORS);
   const [specialty, setSpecialty]   = useState('All');
   const [search, setSearch]         = useState('');
   const [loading, setLoading]       = useState(false);
   const [availabilityByDoctor, setAvailabilityByDoctor] = useState({});
+  const [bookingDoctor, setBookingDoctor] = useState(null);
+  const [bookingBusy, setBookingBusy] = useState(false);
+  const [bookingMessage, setBookingMessage] = useState('');
+  const [bookingError, setBookingError] = useState('');
+  const [bookingForm, setBookingForm] = useState({
+    date: '',
+    time: '',
+    type: 'video',
+    notes: '',
+  });
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -87,6 +99,106 @@ export default function Doctors() {
     fetchAvailability();
   }, [doctors]);
 
+  const getSlotOptions = (doctorId) => {
+    const availability = availabilityByDoctor[doctorId] || [];
+    return availability.flatMap((slot) => {
+      const slotDate = slot?.date ? new Date(slot.date) : null;
+      if (!slotDate || Number.isNaN(slotDate.getTime())) return [];
+
+      const isoDate = slotDate.toISOString();
+      const timeSlots = Array.isArray(slot.timeSlots) ? slot.timeSlots : [];
+      return timeSlots.map((time) => ({
+        date: isoDate,
+        time,
+        label: `${slotDate.toLocaleDateString()} - ${time}`,
+      }));
+    });
+  };
+
+  const openBooking = (doctor) => {
+    setBookingMessage('');
+    setBookingError('');
+
+    let currentUser = null;
+    try {
+      currentUser = JSON.parse(localStorage.getItem('emedicare_user') || 'null');
+    } catch {
+      currentUser = null;
+    }
+
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+
+    if (currentUser.role !== 'patient') {
+      setBookingError('Only patients can book appointments. Please login as patient.');
+      return;
+    }
+
+    const slotOptions = getSlotOptions(doctor._id);
+    const firstSlot = slotOptions[0] || null;
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    setBookingForm({
+      date: firstSlot?.date || tomorrow.toISOString(),
+      time: firstSlot?.time || '10:00-11:00',
+      type: 'video',
+      notes: '',
+    });
+    setBookingDoctor(doctor);
+  };
+
+  const closeBooking = () => {
+    setBookingDoctor(null);
+    setBookingBusy(false);
+  };
+
+  const handleBooking = async (e) => {
+    e.preventDefault();
+    if (!bookingDoctor) return;
+
+    let currentUser = null;
+    try {
+      currentUser = JSON.parse(localStorage.getItem('emedicare_user') || 'null');
+    } catch {
+      currentUser = null;
+    }
+
+    if (!currentUser?.id) {
+      navigate('/login');
+      return;
+    }
+
+    if (!bookingForm.date || !bookingForm.time) {
+      setBookingError('Date and time are required.');
+      return;
+    }
+
+    setBookingBusy(true);
+    setBookingError('');
+    setBookingMessage('');
+
+    try {
+      await bookAppointment({
+        patientId: currentUser.id,
+        doctorId: bookingDoctor._id,
+        date: bookingForm.date,
+        time: bookingForm.time,
+        type: bookingForm.type,
+        notes: bookingForm.notes,
+      });
+
+      setBookingMessage('Appointment booked successfully. You can check status in Appointments page.');
+      closeBooking();
+    } catch (err) {
+      setBookingError(err.response?.data?.message || 'Failed to book appointment.');
+    } finally {
+      setBookingBusy(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-bg">
       <div className="max-w-6xl mx-auto px-6 py-12">
@@ -98,6 +210,13 @@ export default function Doctors() {
           <h1 className="text-3xl font-heading font-bold mb-2">Browse Verified Doctors</h1>
           <p className="text-white/50 text-sm">Filter by specialty and book your appointment instantly.</p>
         </div>
+
+        {bookingError && <div className="alert-error mb-6">{bookingError}</div>}
+        {bookingMessage && (
+          <div className="border border-emerald-400/30 bg-emerald-500/10 text-emerald-200 rounded-xl px-4 py-3 text-sm mb-6">
+            {bookingMessage}
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-8">
@@ -151,15 +270,102 @@ export default function Doctors() {
                   <span className="text-sm text-white/60">
                     ⭐ {doc.rating} &nbsp;·&nbsp; <span className="text-white font-semibold">${doc.consultationFee}</span>
                   </span>
-                  <Link 
-                    to={`/book-appointment/${doc._id}`}
-                    className={`btn-primary text-xs px-4 py-1.5 ${!doc.isAvailable ? 'opacity-50 pointer-events-none' : ''}`}
+                  <button
+                    className="btn-primary text-xs px-4 py-1.5"
+                    disabled={!doc.isAvailable}
+                    onClick={() => openBooking(doc)}
+                    type="button"
                   >
                     Book
                   </Link>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {bookingDoctor && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center px-4">
+            <div className="absolute inset-0 bg-black/55" onClick={closeBooking} />
+            <div className="relative z-10 w-full max-w-lg card">
+              <div className="flex items-start justify-between gap-3 mb-5">
+                <div>
+                  <h2 className="font-heading text-xl">Book Appointment</h2>
+                  <p className="text-xs text-white/50 mt-1">
+                    {bookingDoctor.name} · {bookingDoctor.specialty}
+                  </p>
+                </div>
+                <button type="button" onClick={closeBooking} className="btn-ghost text-xs px-3 py-2">Close</button>
+              </div>
+
+              <form onSubmit={handleBooking} className="space-y-3">
+                <div>
+                  <label className="form-label">Date</label>
+                  <input
+                    type="datetime-local"
+                    className="form-input"
+                    value={bookingForm.date ? new Date(bookingForm.date).toISOString().slice(0, 16) : ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setBookingForm((prev) => ({
+                        ...prev,
+                        date: value ? new Date(value).toISOString() : '',
+                      }));
+                    }}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label">Time Slot</label>
+                  <select
+                    className="form-input"
+                    value={bookingForm.time}
+                    onChange={(e) => setBookingForm((prev) => ({ ...prev, time: e.target.value }))}
+                    required
+                  >
+                    {getSlotOptions(bookingDoctor._id).length > 0 ? (
+                      getSlotOptions(bookingDoctor._id).map((slot, idx) => (
+                        <option key={`${slot.label}-${idx}`} value={slot.time}>{slot.label}</option>
+                      ))
+                    ) : (
+                      <option value="10:00-11:00">No schedule found - default 10:00-11:00</option>
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="form-label">Consultation Type</label>
+                  <select
+                    className="form-input"
+                    value={bookingForm.type}
+                    onChange={(e) => setBookingForm((prev) => ({ ...prev, type: e.target.value }))}
+                  >
+                    <option value="video">Video</option>
+                    <option value="in-person">In Person</option>
+                    <option value="phone">Phone</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="form-label">Notes</label>
+                  <textarea
+                    className="form-input"
+                    rows={3}
+                    placeholder="Add optional note"
+                    value={bookingForm.notes}
+                    onChange={(e) => setBookingForm((prev) => ({ ...prev, notes: e.target.value }))}
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button type="button" className="btn-outline text-sm px-4 py-2" onClick={closeBooking}>Cancel</button>
+                  <button type="submit" className="btn-primary text-sm px-4 py-2" disabled={bookingBusy}>
+                    {bookingBusy ? 'Booking...' : 'Confirm Booking'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>
