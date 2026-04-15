@@ -207,6 +207,7 @@ export default function AdminPanel() {
       title: 'Edit Patient',
       fields: {
         name: patient.name || '',
+        email: patient.email || '',
         phone: patient.phone || '',
       },
     });
@@ -259,6 +260,7 @@ export default function AdminPanel() {
       await withBusy(`edit-patient-${editModal.id}`, () =>
         updatePatientByAdmin(editModal.id, {
           name: editModal.fields.name.trim(),
+          email: editModal.fields.email.trim().toLowerCase(),
           phone: editModal.fields.phone.trim(),
         })
       );
@@ -607,6 +609,7 @@ export default function AdminPanel() {
                 <tr>
                   <th className="text-left py-2 pr-3">Name</th>
                   <th className="text-left py-2 pr-3">Email</th>
+                  <th className="text-left py-2 pr-3">Phone</th>
                   <th className="text-left py-2 pr-3">Active</th>
                   <th className="text-left py-2 pr-3">Actions</th>
                 </tr>
@@ -616,6 +619,7 @@ export default function AdminPanel() {
                   <tr key={p._id} className="border-b border-white/5">
                     <td className="py-2 pr-3">{p.name}</td>
                     <td className="py-2 pr-3">{p.email}</td>
+                    <td className="py-2 pr-3">{p.phone || '-'}</td>
                     <td className="py-2 pr-3">{p.isActive ? 'Yes' : 'No'}</td>
                     <td className="py-2 pr-3 space-x-3">
                       <button
@@ -830,6 +834,14 @@ export default function AdminPanel() {
                     />
                     <input
                       className="form-input"
+                      type="email"
+                      value={editModal.fields.email || ''}
+                      onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, email: e.target.value } }))}
+                      placeholder="Patient email"
+                      required
+                    />
+                    <input
+                      className="form-input md:col-span-2"
                       value={editModal.fields.phone || ''}
                       onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, phone: e.target.value } }))}
                       placeholder="Phone"

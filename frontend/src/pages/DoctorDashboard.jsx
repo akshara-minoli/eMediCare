@@ -14,11 +14,25 @@ import {
   getMyDoctorProfile,
   getPatients,
   saveDoctorAvailability,
+  updateDoctor,
   updateDoctorAppointmentStatus,
   updateMyDoctorProfile,
 } from '../services/api';
 
 const TABS = ['Profile', 'Availability', 'Appointments', 'Video Consultation', 'Prescriptions', 'Patient Reports'];
+const SPECIALTIES = [
+  'General Physician',
+  'Cardiologist',
+  'Dermatologist',
+  'Neurologist',
+  'Orthopedist',
+  'Pediatrician',
+  'Psychiatrist',
+  'Gynecologist',
+  'Ophthalmologist',
+  'ENT Specialist',
+  'Other',
+];
 
 export default function DoctorDashboard() {
   const navigate = useNavigate();
@@ -43,6 +57,11 @@ export default function DoctorDashboard() {
   const [prescriptionForm, setPrescriptionForm] = useState({ patientId: '', diagnosis: '', medicines: '', notes: '' });
   const [reportPatientId, setReportPatientId] = useState('');
   const [selectedAppointmentId, setSelectedAppointmentId] = useState('');
+  const [cancelAvailabilityForm, setCancelAvailabilityForm] = useState({
+    open: false,
+    availabilityId: '',
+    message: '',
+  });
 
   const normalizeTo24HourSlot = (slot) => {
     const value = (slot || '').trim();
@@ -204,7 +223,12 @@ export default function DoctorDashboard() {
     try {
       await fn();
     } catch (err) {
-      setError(err.response?.data?.message || 'Operation failed');
+      setError(
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        'Operation failed'
+      );
     } finally {
       setBusy(false);
     }
@@ -217,13 +241,6 @@ export default function DoctorDashboard() {
       const response = await getMyDoctorProfile();
       const doctor = response.data?.doctor;
       setProfile(doctor);
-      setProfileForm({
-        name: doctor?.name || '',
-        specialty: doctor?.specialty || 'General Physician',
-        phone: doctor?.phone || '',
-        experience: doctor?.experience ?? 0,
-        consultationFee: doctor?.consultationFee ?? 0,
-      });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load doctor profile');
     } finally {
@@ -237,16 +254,20 @@ export default function DoctorDashboard() {
       const doctor = response.data?.doctor;
       if (!doctor) return;
       setProfile(doctor);
-      setProfileForm({
-        name: doctor?.name || '',
-        specialty: doctor?.specialty || 'General Physician',
-        phone: doctor?.phone || '',
-        experience: doctor?.experience ?? 0,
-        consultationFee: doctor?.consultationFee ?? 0,
-      });
     } catch {
       // Keep current profile state if background sync fails.
     }
+  };
+
+  const openProfileEditor = () => {
+    setProfileForm({
+      name: profile?.name || '',
+      specialty: profile?.specialty || 'General Physician',
+      phone: profile?.phone || '',
+      experience: profile?.experience ?? 0,
+      consultationFee: profile?.consultationFee ?? 0,
+    });
+    setProfileEditorOpen(true);
   };
 
   const loadAvailability = async () => {
@@ -327,17 +348,32 @@ export default function DoctorDashboard() {
       // Validate form data
       if (!profileForm.name?.trim()) throw new Error('Name is required');
       if (!profileForm.specialty?.trim()) throw new Error('Specialty is required');
+      if (!SPECIALTIES.includes(profileForm.specialty.trim())) {
+        throw new Error('Please select a valid specialty from the list');
+      }
+
+      const experience = Number(profileForm.experience);
+      const consultationFee = Number(profileForm.consultationFee);
+      if (!Number.isFinite(experience) || experience < 0) {
+        throw new Error('Experience must be a valid non-negative number');
+      }
+      if (!Number.isFinite(consultationFee) || consultationFee < 0) {
+        throw new Error('Consultation fee must be a valid non-negative number');
+      }
       
       // Submit update with proper number conversion
       const updatePayload = {
         name: profileForm.name.trim(),
         specialty: profileForm.specialty.trim(),
-        phone: profileForm.phone.trim(),
-        experience: profileForm.experience ? Number(profileForm.experience) : 0,
-        consultationFee: profileForm.consultationFee ? Number(profileForm.consultationFee) : 0,
+        phone: String(profileForm.phone || '').trim(),
+        experience,
+        consultationFee,
       };
       
-      const response = await updateMyDoctorProfile(updatePayload);
+      if (!profile?._id) throw new Error('Doctor profile is not loaded yet');
+
+      const response = await updateDoctor(profile._id, updatePayload);
+
       const updatedDoctor = response.data?.doctor;
       
       if (!updatedDoctor) throw new Error('Server did not return updated profile');
@@ -383,17 +419,37 @@ export default function DoctorDashboard() {
     });
   };
 
-  const cancelAvailabilityWithMessage = async (availabilityId) => {
-    const message = window.prompt('Enter cancellation message for patients:');
-    if (!message || !message.trim()) {
+  const openCancelAvailabilityForm = (availabilityId) => {
+    setCancelAvailabilityForm({
+      open: true,
+      availabilityId,
+      message: '',
+    });
+  };
+
+  const closeCancelAvailabilityForm = () => {
+    setCancelAvailabilityForm({
+      open: false,
+      availabilityId: '',
+      message: '',
+    });
+  };
+
+  const submitCancelAvailability = async (e) => {
+    e.preventDefault();
+    if (!cancelAvailabilityForm.message.trim()) {
       setError('Cancellation message is required');
       return;
     }
 
     await runBusy(async () => {
-      const response = await cancelDoctorAvailability(availabilityId, message.trim());
+      const response = await cancelDoctorAvailability(
+        cancelAvailabilityForm.availabilityId,
+        cancelAvailabilityForm.message.trim()
+      );
       await loadAvailability();
       setSuccess(response.data?.message || 'Availability cancelled');
+      closeCancelAvailabilityForm();
     });
   };
 
@@ -600,7 +656,7 @@ export default function DoctorDashboard() {
             </div>
             <button
               type="button"
-              onClick={() => setProfileEditorOpen(true)}
+              onClick={openProfileEditor}
               className="w-11 h-11 rounded-full border border-primary/35 bg-primary/10 hover:bg-primary/20 text-lg transition-colors"
               aria-label="Open profile management"
               title="Profile Management"
@@ -653,7 +709,7 @@ export default function DoctorDashboard() {
                     <button
                       type="button"
                       disabled={busy}
-                      onClick={() => cancelAvailabilityWithMessage(item._id)}
+                      onClick={() => openCancelAvailabilityForm(item._id)}
                       className="mt-2 text-red-300 hover:text-red-100"
                     >
                       Cancel Availability
@@ -915,6 +971,52 @@ export default function DoctorDashboard() {
           </section>
         )}
 
+        {cancelAvailabilityForm.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+            <div className="w-full max-w-lg card">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-heading text-xl">Cancel Availability</h2>
+                <button
+                  type="button"
+                  className="text-white/60 hover:text-white"
+                  onClick={closeCancelAvailabilityForm}
+                >
+                  Close
+                </button>
+              </div>
+
+              <form onSubmit={submitCancelAvailability} className="space-y-3">
+                <label className="block">
+                  <span className="form-label">Message for patients</span>
+                  <textarea
+                    className="form-input min-h-24"
+                    value={cancelAvailabilityForm.message}
+                    onChange={(e) =>
+                      setCancelAvailabilityForm((prev) => ({ ...prev, message: e.target.value }))
+                    }
+                    placeholder="Enter cancellation reason"
+                    required
+                  />
+                </label>
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    className="btn-outline"
+                    onClick={closeCancelAvailabilityForm}
+                    disabled={busy}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-primary" disabled={busy}>
+                    {busy ? 'Submitting...' : 'Confirm Cancellation'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {profileEditorOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4">
             <div className="w-full max-w-2xl card">
@@ -935,7 +1037,16 @@ export default function DoctorDashboard() {
                 </label>
                 <label className="block">
                   <span className="form-label">Specialty</span>
-                  <input className="form-input" value={profileForm.specialty} onChange={(e) => setProfileForm((p) => ({ ...p, specialty: e.target.value }))} placeholder="Specialty" required />
+                  <select
+                    className="form-input"
+                    value={profileForm.specialty}
+                    onChange={(e) => setProfileForm((p) => ({ ...p, specialty: e.target.value }))}
+                    required
+                  >
+                    {SPECIALTIES.map((item) => (
+                      <option key={item} value={item}>{item}</option>
+                    ))}
+                  </select>
                 </label>
                 <label className="block">
                   <span className="form-label">Phone</span>
