@@ -714,6 +714,37 @@ export default function DoctorDashboard() {
                     >
                       Cancel Availability
                     </button>
+
+                    {cancelAvailabilityForm.open && cancelAvailabilityForm.availabilityId === item._id && (
+                      <form onSubmit={submitCancelAvailability} className="mt-3 space-y-3 border-t border-white/10 pt-3">
+                        <label className="block">
+                          <span className="form-label">Message for patients</span>
+                          <textarea
+                            className="form-input min-h-24"
+                            value={cancelAvailabilityForm.message}
+                            onChange={(e) =>
+                              setCancelAvailabilityForm((prev) => ({ ...prev, message: e.target.value }))
+                            }
+                            placeholder="Enter cancellation reason"
+                            required
+                          />
+                        </label>
+
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            className="btn-outline"
+                            onClick={closeCancelAvailabilityForm}
+                            disabled={busy}
+                          >
+                            Close
+                          </button>
+                          <button type="submit" className="btn-primary" disabled={busy}>
+                            {busy ? 'Submitting...' : 'Confirm Cancellation'}
+                          </button>
+                        </div>
+                      </form>
+                    )}
                   </div>
                 ))}
               </div>
@@ -969,52 +1000,6 @@ export default function DoctorDashboard() {
               </div>
             )}
           </section>
-        )}
-
-        {cancelAvailabilityForm.open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-            <div className="w-full max-w-lg card">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-heading text-xl">Cancel Availability</h2>
-                <button
-                  type="button"
-                  className="text-white/60 hover:text-white"
-                  onClick={closeCancelAvailabilityForm}
-                >
-                  Close
-                </button>
-              </div>
-
-              <form onSubmit={submitCancelAvailability} className="space-y-3">
-                <label className="block">
-                  <span className="form-label">Message for patients</span>
-                  <textarea
-                    className="form-input min-h-24"
-                    value={cancelAvailabilityForm.message}
-                    onChange={(e) =>
-                      setCancelAvailabilityForm((prev) => ({ ...prev, message: e.target.value }))
-                    }
-                    placeholder="Enter cancellation reason"
-                    required
-                  />
-                </label>
-
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    className="btn-outline"
-                    onClick={closeCancelAvailabilityForm}
-                    disabled={busy}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn-primary" disabled={busy}>
-                    {busy ? 'Submitting...' : 'Confirm Cancellation'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
         )}
 
         {profileEditorOpen && (
