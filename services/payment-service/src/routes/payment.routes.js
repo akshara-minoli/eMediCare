@@ -78,6 +78,7 @@ router.post('/create-checkout-session', async (req, res) => {
       appointmentId,
       amount: Number(amount),
       method: 'stripe',
+      transactionId: `PENDING-${session.id}`,
       stripeSessionId: session.id,
       status: 'pending',
       patientName,
