@@ -18,6 +18,8 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentCancel from './pages/PaymentCancel';
 
 function App() {
   const { pathname } = useLocation();
@@ -65,6 +67,8 @@ function App() {
         />
         <Route path="/about"             element={<About />} />
         <Route path="/contact"           element={<Contact />} />
+        <Route path="/payment/success"   element={<PaymentSuccess />} />
+        <Route path="/payment/cancel"    element={<PaymentCancel />} />
         <Route path="*"                  element={<NotFound />} />
       </Routes>
     </>

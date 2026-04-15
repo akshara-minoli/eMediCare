@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   createPatient,
   getPatient,
   getPatientReports,
   updatePatient,
   uploadPatientReport,
+  getPaymentHistory,
 } from '../services/api';
 
 export default function Dashboard() {
@@ -22,6 +25,8 @@ export default function Dashboard() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
   const [profileError, setProfileError] = useState('');
+  const [payments, setPayments] = useState([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('emedicare_user');
@@ -39,14 +44,12 @@ export default function Dashboard() {
         setReports([]);
       }
     };
-
     loadReports();
   }, [user]);
 
   useEffect(() => {
     const loadPatientProfile = async () => {
       if (!user || user.role !== 'patient') return;
-
       setProfileLoading(true);
       setProfileError('');
       setProfileMessage('');
@@ -73,8 +76,23 @@ export default function Dashboard() {
         setProfileLoading(false);
       }
     };
-
     loadPatientProfile();
+  }, [user]);
+
+  useEffect(() => {
+    const loadPayments = async () => {
+      if (!user?.id || user.role !== 'patient') return;
+      setPaymentsLoading(true);
+      try {
+        const res = await getPaymentHistory(user.id);
+        setPayments(res.data?.payments || []);
+      } catch {
+        setPayments([]);
+      } finally {
+        setPaymentsLoading(false);
+      }
+    };
+    loadPayments();
   }, [user]);
 
   const handleProfileChange = (e) => {
@@ -84,7 +102,6 @@ export default function Dashboard() {
   const handleProfileSave = async (e) => {
     e.preventDefault();
     if (!user || user.role !== 'patient') return;
-
     setProfileSaving(true);
     setProfileError('');
     setProfileMessage('');
@@ -114,21 +131,12 @@ export default function Dashboard() {
   const handleReportUpload = async (e) => {
     e.preventDefault();
     setReportMessage('');
-
     if (!user?.id || user.role !== 'patient') return;
-    if (!reportFile) {
-      setReportMessage('Please choose a PDF file first.');
-      return;
-    }
-
-    if (reportFile.type !== 'application/pdf') {
-      setReportMessage('Only PDF files are allowed.');
-      return;
-    }
+    if (!reportFile) { setReportMessage('Please choose a PDF file first.'); return; }
+    if (reportFile.type !== 'application/pdf') { setReportMessage('Only PDF files are allowed.'); return; }
 
     const formData = new FormData();
     formData.append('report', reportFile);
-
     setUploading(true);
     try {
       await uploadPatientReport(user.id, formData);
@@ -141,6 +149,76 @@ export default function Dashboard() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const downloadReceipt = (payment) => {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    doc.setFillColor(10, 15, 40);
+    doc.rect(0, 0, pageWidth, 45, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text('eMediCare', 14, 18);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(180, 190, 220);
+    doc.text('Official Payment Receipt', 14, 26);
+    doc.text('Advanced Healthcare Management System', 14, 32);
+
+    doc.setFillColor(56, 82, 219);
+    doc.roundedRect(pageWidth - 50, 10, 36, 14, 3, 3, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PAID', pageWidth - 34, 18, { align: 'center' });
+
+    doc.setDrawColor(56, 82, 219);
+    doc.setLineWidth(0.8);
+    doc.line(14, 48, pageWidth - 14, 48);
+
+    doc.setTextColor(30, 30, 60);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Payment Receipt', 14, 60);
+
+    const transDate = payment.createdAt
+      ? new Date(payment.createdAt).toLocaleString()
+      : new Date().toLocaleString();
+
+    autoTable(doc, {
+      startY: 65,
+      margin: { left: 14, right: 14 },
+      head: [['Field', 'Details']],
+      body: [
+        ['Transaction ID', payment.transactionId || 'N/A'],
+        ['Date & Time', transDate],
+        ['Amount Paid', `$${Number(payment.amount || 0).toFixed(2)} USD`],
+        ['Status', 'PAID ✓'],
+        ['Patient', payment.patientName || user?.name || 'N/A'],
+        ['Doctor', `Dr. ${payment.doctorName || 'N/A'}`],
+        ['Appointment ID', payment.appointmentId || 'N/A'],
+        ['Appointment Date', `${payment.appointmentDate || 'N/A'} ${payment.appointmentTime || ''}`],
+      ],
+      headStyles: { fillColor: [56, 82, 219], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
+      bodyStyles: { fontSize: 9, textColor: [40, 40, 80] },
+      alternateRowStyles: { fillColor: [240, 243, 255] },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55 } },
+    });
+
+    const afterTable = doc.lastAutoTable.finalY + 10;
+    doc.setFillColor(240, 243, 255);
+    doc.roundedRect(14, afterTable, pageWidth - 28, 18, 3, 3, 'F');
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(100, 100, 160);
+    doc.text('Thank you for choosing eMediCare. This is an official digitally generated receipt.', pageWidth / 2, afterTable + 8, { align: 'center' });
+    doc.text('For queries, contact support@emedicare.health', pageWidth / 2, afterTable + 14, { align: 'center' });
+
+    doc.save(`receipt-${payment.transactionId || payment._id}.pdf`);
   };
 
   if (!user) return null;
@@ -158,6 +236,7 @@ export default function Dashboard() {
     { id: 'patient-reports', label: 'Reports', icon: '📄' },
     { id: 'patient-appointments', label: 'Appointments', icon: '📅' },
     { id: 'patient-telemedicine', label: 'Telemedicine', icon: '📹' },
+    { id: 'patient-payments', label: 'Payment History', icon: '💳' },
     { id: 'patient-ai', label: 'AI Checker', icon: '🤖' },
   ];
 
@@ -166,6 +245,8 @@ export default function Dashboard() {
     const d = new Date(value);
     return Number.isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString();
   };
+
+  const successfulPayments = payments.filter((p) => p.status === 'success');
 
   return (
     <main className="min-h-screen bg-bg">
@@ -199,9 +280,14 @@ export default function Dashboard() {
                   key={item.id}
                   type="button"
                   onClick={() => jumpTo(item.id)}
-                  className="btn-outline w-full justify-start py-2"
+                  className={`btn-outline w-full justify-start py-2 ${item.id === 'patient-payments' ? 'border-primary/30 text-primary bg-primary/5' : ''}`}
                 >
                   <span className="mr-2">{item.icon}</span>{item.label}
+                  {item.id === 'patient-payments' && successfulPayments.length > 0 && (
+                    <span className="ml-auto bg-primary/20 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                      {successfulPayments.length}
+                    </span>
+                  )}
                 </button>
               ))}
             </nav>
@@ -259,12 +345,14 @@ export default function Dashboard() {
                   <p className="text-3xl font-heading font-bold text-white">{medicalHistory.length}</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-white/40 mb-2">Profile</p>
-                  <p className="text-sm font-semibold text-white">{profile.phone ? 'Updated' : 'Incomplete'}</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-white/40 mb-2">Payments</p>
+                  <p className="text-3xl font-heading font-bold text-emerald-300">{successfulPayments.length}</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-white/40 mb-2">Appointments</p>
-                  <p className="text-sm font-semibold text-white">View in Schedule</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-white/40 mb-2">Total Paid</p>
+                  <p className="text-2xl font-heading font-bold text-white">
+                    ${successfulPayments.reduce((sum, p) => sum + (p.amount || 0), 0).toFixed(0)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -290,10 +378,8 @@ export default function Dashboard() {
                 {user.role === 'patient' && (
                   <form onSubmit={handleProfileSave} className="mt-6 space-y-3">
                     <h3 className="font-semibold text-white text-sm">Patient Profile</h3>
-
                     {profileError && <div className="alert-error">{profileError}</div>}
                     {profileMessage && <div className="text-emerald-300 text-xs">{profileMessage}</div>}
-
                     <div>
                       <label className="form-label">Phone</label>
                       <input
@@ -306,7 +392,6 @@ export default function Dashboard() {
                         disabled={profileLoading || profileSaving}
                       />
                     </div>
-
                     <div>
                       <label className="form-label">Blood Group</label>
                       <select
@@ -317,17 +402,11 @@ export default function Dashboard() {
                         disabled={profileLoading || profileSaving}
                       >
                         <option value="">Not set</option>
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
+                        {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(bg => (
+                          <option key={bg} value={bg}>{bg}</option>
+                        ))}
                       </select>
                     </div>
-
                     <button
                       type="submit"
                       className="btn-primary text-sm px-4 py-2"
@@ -360,7 +439,6 @@ export default function Dashboard() {
                 </div>
                 <button type="button" onClick={() => jumpTo('patient-reports')} className="btn-primary text-xs px-4 py-2">Go to Reports</button>
               </div>
-
               {medicalHistory.length === 0 ? (
                 <p className="text-sm text-white/50">No medical history entries yet.</p>
               ) : (
@@ -388,7 +466,6 @@ export default function Dashboard() {
                   Telemedicine
                 </button>
               </div>
-
               <form onSubmit={handleReportUpload} className="flex flex-col md:flex-row gap-3 md:items-center">
                 <input
                   type="file"
@@ -401,7 +478,6 @@ export default function Dashboard() {
                 </button>
               </form>
               {reportMessage && <p className="text-sm text-white/70">{reportMessage}</p>}
-
               <div className="space-y-2">
                 {reports.length === 0 && <p className="text-sm text-white/50">No uploaded reports yet.</p>}
                 {reports.map((report) => (
@@ -428,7 +504,7 @@ export default function Dashboard() {
                   </div>
                   <Link to="/appointments" className="btn-primary text-xs px-4 py-2">View Schedule</Link>
                 </div>
-                <p className="text-sm text-white/50">Use the appointments page to book and view visits.</p>
+                <p className="text-sm text-white/50">Use the appointments page to book, view, and pay for visits.</p>
               </div>
 
               <div id="patient-telemedicine" className="card">
@@ -441,6 +517,79 @@ export default function Dashboard() {
                 </div>
                 <p className="text-sm text-white/50">Video call sessions will appear here when scheduled.</p>
               </div>
+            </div>
+
+            {/* ── Payment History ─────────────────────────────────────── */}
+            <div id="patient-payments" className="card space-y-4">
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <div>
+                  <h2 className="font-heading font-semibold text-lg flex items-center gap-2">
+                    💳 Payment History
+                  </h2>
+                  <p className="text-xs text-white/40 mt-1">All your past payments and downloadable receipts</p>
+                </div>
+                <Link to="/appointments" className="btn-outline text-xs px-4 py-2">Pay for Appointment</Link>
+              </div>
+
+              {paymentsLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-bg-surface2 border-t-primary rounded-full animate-spin" />
+                </div>
+              ) : successfulPayments.length === 0 ? (
+                <div className="text-center py-10 space-y-3">
+                  <span className="text-4xl block">💳</span>
+                  <p className="text-white/50 text-sm">No payment records yet.</p>
+                  <Link to="/appointments" className="btn-primary text-sm px-5 py-2 inline-flex">
+                    Pay for an Appointment
+                  </Link>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead className="text-white/60 border-b border-white/10">
+                      <tr>
+                        <th className="text-left py-2 pr-3">Appointment ID</th>
+                        <th className="text-left py-2 pr-3">Date</th>
+                        <th className="text-left py-2 pr-3">Doctor</th>
+                        <th className="text-left py-2 pr-3">Amount</th>
+                        <th className="text-left py-2 pr-3">Method</th>
+                        <th className="text-left py-2 pr-3">Transaction ID</th>
+                        <th className="text-right py-2">Receipt</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {successfulPayments.map((p) => (
+                        <tr key={p._id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                          <td className="py-3 pr-3 font-mono text-xs text-white/60">{p.appointmentId?.slice(-8) || 'N/A'}</td>
+                          <td className="py-3 pr-3 text-white/70">
+                            {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'N/A'}
+                          </td>
+                          <td className="py-3 pr-3">{p.doctorName ? `Dr. ${p.doctorName}` : '—'}</td>
+                          <td className="py-3 pr-3 font-semibold text-emerald-300">
+                            ${Number(p.amount || 0).toFixed(2)}
+                          </td>
+                          <td className="py-3 pr-3 capitalize text-white/60">{p.method || 'stripe'}</td>
+                          <td className="py-3 pr-3 font-mono text-xs text-white/50 max-w-[140px] truncate" title={p.transactionId}>
+                            {p.transactionId || '—'}
+                          </td>
+                          <td className="py-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => downloadReceipt(p)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-400/25 transition-all hover:-translate-y-0.5"
+                            >
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                              </svg>
+                              PDF
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             <div id="patient-ai" className="card">

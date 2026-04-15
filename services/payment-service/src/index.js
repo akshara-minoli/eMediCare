@@ -10,6 +10,24 @@ const PORT = process.env.PORT || 5003;
 
 // ── Middleware ────────────────────────────────────────────────
 app.use(cors());
+
+// Raw body capture for Stripe webhook signature verification
+// Must come BEFORE express.json() so the raw buffer is preserved
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/payments/webhook') {
+    let data = '';
+    req.setEncoding('utf8');
+    req.on('data', (chunk) => { data += chunk; });
+    req.on('end', () => {
+      req.rawBody = data;
+      req.body = data;
+      next();
+    });
+  } else {
+    next();
+  }
+});
+
 app.use(express.json());
 
 // ── Database ──────────────────────────────────────────────────
@@ -28,4 +46,6 @@ app.get('/health', (req, res) => {
 // ── Start ─────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n💳 Payment Service running at http://localhost:${PORT}`);
+  const stripeConfigured = !!process.env.STRIPE_SECRET_KEY;
+  console.log(`   Stripe: ${stripeConfigured ? '✅ configured' : '⚠️  not configured (set STRIPE_SECRET_KEY)'}`);
 });

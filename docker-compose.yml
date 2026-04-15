@@ -97,6 +97,10 @@ services:
       - "5003:5003"
     environment:
       - PORT=5003
+      - STRIPE_SECRET_KEY=sk_test_51TMW3xCmMQFxXLzs6YZaLQRcRLHp1TaxczztTMo63Ts83k1Uv5fJaijTEQPfpsM45ienvxR8Q6kTMMvUxY7Xu67v00Lwz1auIi
+      - STRIPE_SUCCESS_URL=http://localhost:3000/payment/success
+      - STRIPE_CANCEL_URL=http://localhost:3000/payment/cancel
+      - STRIPE_WEBHOOK_SECRET=whsec_placeholder_replace_in_production
     depends_on:
       - mongo
     networks:
