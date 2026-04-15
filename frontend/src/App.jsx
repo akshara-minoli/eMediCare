@@ -8,6 +8,7 @@ import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Doctors from './pages/Doctors';
 import Appointments from './pages/Appointments';
+import BookAppointment from './pages/BookAppointment';
 import Telemedicine from './pages/Telemedicine';
 import SymptomChecker from './pages/SymptomChecker';
 import AdminPanel from './pages/AdminPanel';
@@ -43,6 +44,7 @@ function App() {
         <Route path="/patient-dashboard" element={<PatientDashboard />} />
         <Route path="/doctors"           element={<Doctors />} />
         <Route path="/appointments"      element={<Appointments />} />
+        <Route path="/book-appointment/:doctorId" element={<BookAppointment />} />
         <Route path="/telemedicine"      element={<Telemedicine />} />
         <Route path="/symptom-checker"   element={<SymptomChecker />} />
         <Route

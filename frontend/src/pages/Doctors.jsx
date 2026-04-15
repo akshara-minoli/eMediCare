@@ -151,9 +151,12 @@ export default function Doctors() {
                   <span className="text-sm text-white/60">
                     ⭐ {doc.rating} &nbsp;·&nbsp; <span className="text-white font-semibold">${doc.consultationFee}</span>
                   </span>
-                  <button className="btn-primary text-xs px-4 py-1.5" disabled={!doc.isAvailable}>
+                  <Link 
+                    to={`/book-appointment/${doc._id}`}
+                    className={`btn-primary text-xs px-4 py-1.5 ${!doc.isAvailable ? 'opacity-50 pointer-events-none' : ''}`}
+                  >
                     Book
-                  </button>
+                  </Link>
                 </div>
               </div>
             ))}
