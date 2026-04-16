@@ -18,6 +18,7 @@ import {
   updateAdminDoctorStatus,
   updatePatientByAdmin,
   updatePaymentByAdmin,
+  sendNotification,
 } from '../services/api';
 
 const SPECIALTIES = [
@@ -66,6 +67,14 @@ export default function AdminPanel() {
     phone: '',
     experience: '',
     consultationFee: '',
+  });
+
+  const [notificationForm, setNotificationForm] = useState({
+    doctorId: '',
+    target: 'all', // 'all' or 'single'
+    patientId: '',
+    message: '',
+    channel: 'system',
   });
 
   const pendingDoctors = useMemo(
@@ -334,6 +343,56 @@ export default function AdminPanel() {
     closeEditModal();
   };
 
+  const handleSendNotification = async (e) => {
+    e.preventDefault();
+    if (!notificationForm.doctorId || !notificationForm.message) {
+      setError('Doctor and Message are required');
+      return;
+    }
+
+    await withBusy('send-notification', async () => {
+      let recipients = [];
+
+      if (notificationForm.target === 'all') {
+        // Find all patients who have appointments with this doctor
+        // Or just all patients? User said "select one patient or all"
+        // Most logical: all patients in the system for "all", or maybe all patients of this doctor.
+        // Let's go with all patients associated with that doctor in appointments
+        const doctorAppointments = appointments.filter(a => String(a.doctorId) === String(notificationForm.doctorId));
+        const patientIds = [...new Set(doctorAppointments.map(a => String(a.patientId)))];
+        recipients = patients
+          .filter(p => patientIds.includes(String(p.userId)) || patientIds.includes(String(p._id)))
+          .map(p => p.email)
+          .filter(Boolean);
+
+        if (recipients.length === 0) {
+          // Fallback: If no appointments, just send to all patients? 
+          // User said "select one patient or all". I'll send to all patients in the system if doctor is selected but target is all.
+          recipients = patients.map(p => p.email).filter(Boolean);
+        }
+      } else {
+        const patient = patients.find(p => String(p.userId) === String(notificationForm.patientId) || String(p._id) === String(notificationForm.patientId));
+        if (patient?.email) recipients = [patient.email];
+      }
+
+      if (recipients.length === 0) {
+        throw new Error('No recipients found with valid email addresses');
+      }
+
+      const doctor = doctors.find(d => String(d._id) === String(notificationForm.doctorId));
+
+      await sendNotification({
+        type: 'ADMIN_ANNOUNCEMENT',
+        recipient: recipients, // We'll update the backend to handle array
+        message: `Message regarding Dr. ${doctor?.name || 'your doctor'}: ${notificationForm.message}`,
+        channel: notificationForm.channel,
+      });
+
+      setSuccess(`Notification sent to ${recipients.length} recipients`);
+      setNotificationForm(prev => ({ ...prev, message: '', patientId: '' }));
+    });
+  };
+
   const exportTableToPdf = (title, headers, rows) => {
     const doc = new jsPDF({ orientation: 'landscape' });
     doc.setFontSize(14);
@@ -444,6 +503,7 @@ export default function AdminPanel() {
               <button type="button" onClick={() => openView('patients')} className={navButtonClass('patients')}>Patients</button>
               <button type="button" onClick={() => openView('appointments')} className={navButtonClass('appointments')}>Appointments</button>
               <button type="button" onClick={() => openView('payments')} className={navButtonClass('payments')}>Payments</button>
+              <button type="button" onClick={() => openView('notifications')} className={navButtonClass('notifications')}>Notifications</button>
             </nav>
 
             <div className="mt-auto pt-6 border-t border-white/10">
@@ -813,6 +873,110 @@ export default function AdminPanel() {
               </tbody>
             </table>
           </div>
+        </section>
+        )}
+
+        {activeView === 'notifications' && (
+        <section className="card max-w-2xl mx-auto">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="font-heading text-xl">Send Patient Notifications</h2>
+              <p className="text-sm text-white/50">Notify patients about doctor arrivals or updates.</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSendNotification} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-white/60 ml-1">Select Doctor</label>
+                <select
+                  className="form-input"
+                  value={notificationForm.doctorId}
+                  onChange={(e) => setNotificationForm(prev => ({ ...prev, doctorId: e.target.value }))}
+                  required
+                >
+                  <option value="">Choose a doctor...</option>
+                  {doctors.map(doc => (
+                    <option key={doc._id} value={doc._id}>{doc.name} ({doc.specialty})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-white/60 ml-1">Notification Method</label>
+                <div className="form-input bg-white/5 border-white/5 text-white/40 flex items-center gap-2">
+                  <span className="text-primary">●</span> Patient Dashboard Profile
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-white/60 ml-1">Recipient Selection</label>
+              <div className="flex gap-4 p-3 bg-bg-surface2/50 rounded-xl border border-white/5">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="target"
+                    className="accent-primary"
+                    checked={notificationForm.target === 'all'}
+                    onChange={() => setNotificationForm(prev => ({ ...prev, target: 'all', patientId: '' }))}
+                  />
+                  <span className="text-sm text-white/80">All Patients of Doctor</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="target"
+                    className="accent-primary"
+                    checked={notificationForm.target === 'single'}
+                    onChange={() => setNotificationForm(prev => ({ ...prev, target: 'single' }))}
+                  />
+                  <span className="text-sm text-white/80">Specific Patient</span>
+                </label>
+              </div>
+            </div>
+
+            {notificationForm.target === 'single' && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <label className="text-xs font-medium text-white/60 ml-1">Select Patient</label>
+                <select
+                  className="form-input"
+                  value={notificationForm.patientId}
+                  onChange={(e) => setNotificationForm(prev => ({ ...prev, patientId: e.target.value }))}
+                  required={notificationForm.target === 'single'}
+                >
+                  <option value="">Choose a patient...</option>
+                  {patients.map(p => (
+                    <option key={p.userId || p._id} value={p.userId || p._id}>{p.name} ({p.email})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-white/60 ml-1">Message Content</label>
+              <textarea
+                className="form-input min-h-[120px] resize-none py-3"
+                placeholder="Type your message here (e.g. Dr. Smith has arrived and is ready for appointments...)"
+                value={notificationForm.message}
+                onChange={(e) => setNotificationForm(prev => ({ ...prev, message: e.target.value }))}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={busy === 'send-notification'}
+              className="btn-primary w-full justify-center py-3 text-base shadow-lg shadow-primary/20"
+            >
+              {busy === 'send-notification' ? 'Sending...' : 'Send Notification'}
+            </button>
+          </form>
         </section>
         )}
 
