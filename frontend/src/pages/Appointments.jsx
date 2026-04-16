@@ -61,6 +61,7 @@ export default function Appointments() {
     }
   }, [navigate]);
 
+  // Load patient appointments and doctor names for readable table output.
   useEffect(() => {
     loadData();
   }, [loadData]);
@@ -182,11 +183,13 @@ export default function Appointments() {
     doc.save(`receipt-${payment.transactionId || payment._id}.pdf`);
   };
 
+  // Keep newest appointments first for easier patient review.
   const sortedAppointments = useMemo(
     () => [...appointments].sort((a, b) => new Date(b.date) - new Date(a.date)),
     [appointments]
   );
 
+  // Map appointment status to UI color classes.
   const statusClass = (status) => {
     if (status === 'confirmed') return 'text-emerald-300';
     if (status === 'cancelled' || status === 'rejected') return 'text-red-300';

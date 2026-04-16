@@ -17,6 +17,7 @@ const {
   validateEndSessionBody,
 } = require('../middleware/validate.middleware');
 
+// Session creation and lifecycle routes.
 router.post('/sessions', validateCreateSessionBody, createSession);
 router.get('/sessions', listSessions);
 router.get('/sessions/:id', validateSessionIdParam, getSessionById);

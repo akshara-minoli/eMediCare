@@ -1,5 +1,6 @@
 const Patient = require('../models/patient.model');
 
+// Keep only allowed fields when building update payloads.
 const pickDefined = (payload, allowedFields) => {
   const out = {};
   allowedFields.forEach((field) => {
@@ -10,6 +11,7 @@ const pickDefined = (payload, allowedFields) => {
   return out;
 };
 
+// Normalize incoming patient data before writing to MongoDB.
 const normalizePatientPayload = (payload) => {
   const data = { ...payload };
 
@@ -51,6 +53,7 @@ const normalizePatientPayload = (payload) => {
   return data;
 };
 
+// GET one patient profile using auth userId.
 const getPatientByUserId = async (req, res, next) => {
   try {
     const patient = await Patient.findOne({ userId: req.params.userId });
@@ -64,6 +67,7 @@ const getPatientByUserId = async (req, res, next) => {
   }
 };
 
+// CREATE patient profile after registration.
 const createPatient = async (req, res, next) => {
   try {
     const payload = normalizePatientPayload(req.body);
@@ -86,6 +90,7 @@ const createPatient = async (req, res, next) => {
   }
 };
 
+// UPDATE editable patient profile fields.
 const updatePatient = async (req, res, next) => {
   try {
     const allowedFields = [
@@ -121,6 +126,7 @@ const updatePatient = async (req, res, next) => {
   }
 };
 
+// ADD one medical history entry to an existing patient.
 const addMedicalHistory = async (req, res, next) => {
   try {
     const medicalEntry = {

@@ -10,8 +10,10 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
+  // Keep form state in sync with input fields.
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  // Register auth user first, then create patient profile in patient-service.
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -21,6 +23,7 @@ export default function Register() {
       localStorage.setItem('emedicare_token', data.token);
       localStorage.setItem('emedicare_user', JSON.stringify(data.user));
 
+      // Auto-create patient profile for patient role accounts.
       if (data.user?.role === 'patient') {
         try {
           await createPatient({

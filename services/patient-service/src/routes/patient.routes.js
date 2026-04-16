@@ -35,7 +35,8 @@ const upload = multer({
   },
 });
 
-// ── GET /api/patients — List all patients ───────────────────
+// GET /api/patients
+// List all patients with optional status and text search filters.
 router.get('/', async (req, res) => {
   try {
     const { isActive, search } = req.query;
@@ -58,9 +59,12 @@ router.get('/', async (req, res) => {
   }
 });
 
+// POST /api/patients
+// Create patient profile (usually called right after patient signup).
 router.post('/', validateCreatePatientBody, createPatient);
 
-// ── POST /api/patients/:userId/reports — Upload PDF report ─
+// POST /api/patients/:userId/reports
+// Upload one PDF medical report and attach metadata to patient profile.
 router.post('/:userId/reports', validateUserIdParam, (req, res) => {
   upload.single('report')(req, res, async (err) => {
     if (err) {
@@ -96,7 +100,8 @@ router.post('/:userId/reports', validateUserIdParam, (req, res) => {
   });
 });
 
-// ── GET /api/patients/:userId/reports — List patient reports ─
+// GET /api/patients/:userId/reports
+// Return all uploaded reports for one patient.
 router.get('/:userId/reports', validateUserIdParam, async (req, res) => {
   try {
     const patient = await Patient.findOne({ userId: req.params.userId }).select('reports');
@@ -109,7 +114,8 @@ router.get('/:userId/reports', validateUserIdParam, async (req, res) => {
   }
 });
 
-// ── PATCH /api/patients/:userId/block — block patient ───────
+// PATCH /api/patients/:userId/block
+// Soft-block patient by setting isActive=false.
 router.patch('/:userId/block', async (req, res) => {
   try {
     const patient = await Patient.findOneAndUpdate(
@@ -124,7 +130,8 @@ router.patch('/:userId/block', async (req, res) => {
   }
 });
 
-// ── DELETE /api/patients/:userId — delete patient profile ───
+// DELETE /api/patients/:userId
+// Permanently delete one patient profile.
 router.delete('/:userId', async (req, res) => {
   try {
     const patient = await Patient.findOneAndDelete({ userId: req.params.userId });
@@ -135,8 +142,16 @@ router.delete('/:userId', async (req, res) => {
   }
 });
 
+// GET /api/patients/:userId
+// Fetch one patient profile by userId.
 router.get('/:userId', validateUserIdParam, getPatientByUserId);
+
+// PUT /api/patients/:userId
+// Update patient profile fields.
 router.put('/:userId', validateUserIdParam, validateUpdatePatientBody, updatePatient);
+
+// PATCH /api/patients/:userId/history
+// Append a new medical history record.
 router.patch(
   '/:userId/history',
   validateUserIdParam,
