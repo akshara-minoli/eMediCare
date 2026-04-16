@@ -115,6 +115,8 @@ services:
     build:
       context: ./services/notification-service
       dockerfile: ../../docker/services.Dockerfile
+    env_file:
+      - ./services/notification-service/.env
     ports:
       - "5004:5004"
     environment:
