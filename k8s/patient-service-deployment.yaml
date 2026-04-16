@@ -1,0 +1,56 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patient-service
+  namespace: emedicare
+  labels:
+    app: patient-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: patient-service
+  template:
+    metadata:
+      labels:
+        app: patient-service
+    spec:
+      containers:
+      - name: patient-service
+        image: emedicare/patient-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5007
+          name: http
+        env:
+        - name: PORT
+          value: "5007"
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: MONGO_URI_PATIENTS
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: patient-service
+  namespace: emedicare
+  labels:
+    app: patient-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5007
+    targetPort: 5007
+    protocol: TCP
+    name: http
+  selector:
+    app: patient-service

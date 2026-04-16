@@ -1,0 +1,72 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "6"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"appointment-service","namespace":"emedicare"},"spec":{"replicas":2,"selector":{"matchLabels":{"app":"appointment-service"}},"template":{"metadata":{"labels":{"app":"appointment-service"}},"spec":{"containers":[{"env":[{"name":"MONGO_URI","valueFrom":{"secretKeyRef":{"key":"MONGO_URI_APPOINTMENTS","name":"emedicare-secrets"}}}],"image":"emedicare/appointment-service:latest","imagePullPolicy":"IfNotPresent","name":"appointment-service","ports":[{"containerPort":5002}]}]}}}}
+  creationTimestamp: "2026-04-16T17:11:19Z"
+  generation: 6
+  name: appointment-service
+  namespace: emedicare
+  resourceVersion: "150908"
+  uid: 14fefde3-3a06-4d67-9817-ae3f8fbd6207
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: appointment-service
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2026-04-16T22:45:36+05:30"
+      labels:
+        app: appointment-service
+    spec:
+      containers:
+      - env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              key: MONGO_URI_APPOINTMENTS
+              name: emedicare-secrets
+        image: emedicare/appointment-service:latest
+        imagePullPolicy: IfNotPresent
+        name: appointment-service
+        ports:
+        - containerPort: 5002
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 2
+  conditions:
+  - lastTransitionTime: "2026-04-16T17:18:01Z"
+    lastUpdateTime: "2026-04-16T17:18:01Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2026-04-16T18:08:39Z"
+    lastUpdateTime: "2026-04-16T18:08:45Z"
+    message: ReplicaSet "appointment-service-764d46dd47" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 6
+  readyReplicas: 2
+  replicas: 2
+  updatedReplicas: 2

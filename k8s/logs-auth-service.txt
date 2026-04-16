@@ -1,0 +1,8 @@
+﻿
+­ƒöÉ Auth Service running at http://localhost:5001
+Ô£à [Auth Service] MongoDB connected (db: auth_db)
+[Auth] Login successful: user=69dce9ba74bbc33a6b19378e role=admin email=admin@emed.lk ip=::ffff:10.1.0.63
+[Auth] Login successful: user=69dcea4b74bbc33a6b193796 role=doctor email=aksharaminoli98@gmail.com ip=::ffff:10.1.0.63
+[Auth] Login successful: user=69dce9ba74bbc33a6b19378e role=admin email=admin@emed.lk ip=::ffff:10.1.0.63
+[Auth] Login successful: user=69dcea4b74bbc33a6b193796 role=doctor email=aksharaminoli98@gmail.com ip=::ffff:10.1.0.63
+[Auth] Login successful: user=69dce9ba74bbc33a6b19378e role=admin email=admin@emed.lk ip=::ffff:10.1.0.63

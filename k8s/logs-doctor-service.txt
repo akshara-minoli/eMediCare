@@ -1,0 +1,3 @@
+﻿
+­ƒ®║ Doctor Service running at http://localhost:5006
+Ô£à [Doctor Service] MongoDB connected (db: doctor_db)

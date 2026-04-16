@@ -1,0 +1,87 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "9"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"admin-service","namespace":"emedicare"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"admin-service"}},"template":{"metadata":{"labels":{"app":"admin-service"}},"spec":{"containers":[{"env":[{"name":"MONGO_URI","valueFrom":{"secretKeyRef":{"key":"MONGO_URI_ADMIN","name":"emedicare-secrets"}}},{"name":"AUTH_SERVICE_URL","value":"http://auth-service:5001/api/auth"},{"name":"DOCTOR_SERVICE_URL","value":"http://doctor-service:5006/api/doctors"},{"name":"PATIENT_SERVICE_URL","value":"http://patient-service:5007/api/patients"},{"name":"APPOINTMENT_SERVICE_URL","value":"http://appointment-service:5002/api/appointments"},{"name":"PAYMENT_SERVICE_URL","value":"http://payment-service:5003/api/payments"},{"name":"JWT_SECRET","valueFrom":{"secretKeyRef":{"key":"JWT_SECRET","name":"emedicare-secrets"}}}],"image":"emedicare/admin-service:latest","imagePullPolicy":"IfNotPresent","name":"admin-service","ports":[{"containerPort":5009}]}]}}}}
+  creationTimestamp: "2026-04-16T17:27:05Z"
+  generation: 9
+  name: admin-service
+  namespace: emedicare
+  resourceVersion: "153916"
+  uid: 77100164-f897-4860-862a-3bba4230fcc6
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: admin-service
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2026-04-17T00:01:20+05:30"
+      labels:
+        app: admin-service
+    spec:
+      containers:
+      - env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              key: MONGO_URI_ADMIN
+              name: emedicare-secrets
+        - name: AUTH_SERVICE_URL
+          value: http://auth-service:5001/api/auth
+        - name: DOCTOR_SERVICE_URL
+          value: http://doctor-service:5006/api/doctors
+        - name: PATIENT_SERVICE_URL
+          value: http://patient-service:5007/api/patients
+        - name: APPOINTMENT_SERVICE_URL
+          value: http://appointment-service:5002/api/appointments
+        - name: PAYMENT_SERVICE_URL
+          value: http://payment-service:5003/api/payments
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: JWT_SECRET
+              name: emedicare-secrets
+        image: emedicare/admin-service:latest
+        imagePullPolicy: IfNotPresent
+        name: admin-service
+        ports:
+        - containerPort: 5009
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2026-04-16T17:30:14Z"
+    lastUpdateTime: "2026-04-16T17:30:14Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2026-04-16T18:08:40Z"
+    lastUpdateTime: "2026-04-16T18:31:22Z"
+    message: ReplicaSet "admin-service-78577f7447" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 9
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

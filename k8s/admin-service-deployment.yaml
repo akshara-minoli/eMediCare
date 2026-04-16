@@ -1,0 +1,56 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-service
+  namespace: emedicare
+  labels:
+    app: admin-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-service
+  template:
+    metadata:
+      labels:
+        app: admin-service
+    spec:
+      containers:
+      - name: admin-service
+        image: emedicare/admin-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5009
+          name: http
+        env:
+        - name: PORT
+          value: "5009"
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: MONGO_URI_ADMIN
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-service
+  namespace: emedicare
+  labels:
+    app: admin-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5009
+    targetPort: 5009
+    protocol: TCP
+    name: http
+  selector:
+    app: admin-service

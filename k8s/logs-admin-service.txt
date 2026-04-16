@@ -1,0 +1,3 @@
+﻿
+­ƒæ¿ÔÇì­ƒÆ╝ Admin Service running at http://localhost:5009
+Ô£à [Admin Service] MongoDB connected

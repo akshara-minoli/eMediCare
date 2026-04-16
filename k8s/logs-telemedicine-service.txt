@@ -1,0 +1,3 @@
+﻿Video Telemedicine Service running at http://localhost:5008
+Join URLs use free Jitsi rooms and do not require an API key.
+OK [Telemedicine Service] MongoDB connected

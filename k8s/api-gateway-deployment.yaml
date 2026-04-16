@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api-gateway
+  namespace: emedicare
   labels:
     app: api-gateway
 spec:
@@ -18,29 +19,57 @@ spec:
       containers:
         - name: api-gateway
           image: emedicare/api-gateway:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           env:
             - name: PORT
               value: "8080"
             - name: AUTH_SERVICE_URL
-              value: "http://auth-service:5001"
+              valueFrom:
+                configMapKeyRef:
+                  name: emedicare-config
+                  key: AUTH_SERVICE_URL
             - name: APPOINTMENT_SERVICE_URL
-              value: "http://appointment-service:5002"
+              valueFrom:
+                configMapKeyRef:
+                  name: emedicare-config
+                  key: APPOINTMENT_SERVICE_URL
             - name: PAYMENT_SERVICE_URL
-              value: "http://payment-service:5003"
+              valueFrom:
+                configMapKeyRef:
+                  name: emedicare-config
+                  key: PAYMENT_SERVICE_URL
             - name: NOTIFICATION_SERVICE_URL
-              value: "http://notification-service:5004"
+              valueFrom:
+                configMapKeyRef:
+                  name: emedicare-config
+                  key: NOTIFICATION_SERVICE_URL
             - name: AI_SERVICE_URL
-              value: "http://ai-service:5005"
+              valueFrom:
+                configMapKeyRef:
+                  name: emedicare-config
+                  key: AI_SERVICE_URL
             - name: DOCTOR_SERVICE_URL
-              value: "http://doctor-service:5006"
+              valueFrom:
+                configMapKeyRef:
+                  name: emedicare-config
+                  key: DOCTOR_SERVICE_URL
             - name: PATIENT_SERVICE_URL
-              value: "http://patient-service:5007"
+              valueFrom:
+                configMapKeyRef:
+                  name: emedicare-config
+                  key: PATIENT_SERVICE_URL
             - name: TELEMEDICINE_SERVICE_URL
-              value: "http://telemedicine-service:5008"
+              valueFrom:
+                configMapKeyRef:
+                  name: emedicare-config
+                  key: TELEMEDICINE_SERVICE_URL
             - name: ADMIN_SERVICE_URL
-              value: "http://admin-service:5009"
+              valueFrom:
+                configMapKeyRef:
+                  name: emedicare-config
+                  key: ADMIN_SERVICE_URL
           resources:
             requests:
               memory: "128Mi"

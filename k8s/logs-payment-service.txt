@@ -1,0 +1,4 @@
+﻿
+­ƒÆ│ Payment Service running at http://localhost:5003
+   Stripe: ÔÜá´©Å  not configured (set STRIPE_SECRET_KEY)
+Ô£à [Payment Service] MongoDB connected

@@ -1,0 +1,3 @@
+﻿
+­ƒöö Notification Service running at http://localhost:5004
+Ô£à Notification DB Connected

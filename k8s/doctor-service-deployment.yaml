@@ -1,0 +1,56 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doctor-service
+  namespace: emedicare
+  labels:
+    app: doctor-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: doctor-service
+  template:
+    metadata:
+      labels:
+        app: doctor-service
+    spec:
+      containers:
+      - name: doctor-service
+        image: emedicare/doctor-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5006
+          name: http
+        env:
+        - name: PORT
+          value: "5006"
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: MONGO_URI_DOCTORS
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doctor-service
+  namespace: emedicare
+  labels:
+    app: doctor-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5006
+    targetPort: 5006
+    protocol: TCP
+    name: http
+  selector:
+    app: doctor-service

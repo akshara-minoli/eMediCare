@@ -233,6 +233,35 @@ cd ..
 
 ---
 
+### 4️⃣ Build Docker Images (Optional)
+
+To build Docker images for all services:
+
+**For Linux/macOS:**
+```bash
+chmod +x docker-build.sh
+./docker-build.sh docker.io your-username latest
+```
+
+**For Windows:**
+```bash
+docker-build.bat docker.io your-username latest
+```
+
+Alternatively, build manually:
+```bash
+# Build services
+docker build -t emedicare/auth-service -f docker/services.Dockerfile ./services/auth-service
+
+# Build frontend
+docker build -t emedicare/frontend -f docker/frontend.Dockerfile ./frontend
+
+# Build API Gateway
+docker build -t emedicare/api-gateway -f docker/api-gateway.Dockerfile ./api-gateway
+```
+
+---
+
 ## 🚀 Running the Project
 
 ### Option A — Run Manually (Development)
@@ -368,6 +397,72 @@ curl http://localhost:5002/health
 curl http://localhost:5006/health
 curl http://localhost:5007/health
 curl http://localhost:5008/health
+```
+
+---
+
+### Option C — Run with Kubernetes
+
+**Prerequisites:**
+- Kubernetes cluster (Minikube, Docker Desktop, or cloud provider)
+- `kubectl` configured and connected to your cluster
+- Docker images built and available
+
+**Quick Deploy:**
+
+```bash
+cd k8s
+
+# On Linux/macOS
+chmod +x deploy.sh
+./deploy.sh
+
+# On Windows
+deploy.bat
+```
+
+**Manual Deployment:**
+
+```bash
+# Create namespace and deploy all resources
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/secrets.yaml
+kubectl apply -f k8s/mongodb-deployment.yaml
+kubectl apply -f k8s/api-gateway-deployment.yaml
+kubectl apply -f k8s/api-gateway-service.yaml
+kubectl apply -f k8s/services-deployment.yaml
+kubectl apply -f k8s/frontend-deployment.yaml
+kubectl apply -f k8s/ingress.yaml
+```
+
+**Access the Application:**
+
+```bash
+# Port forward to frontend
+kubectl port-forward -n emedicare svc/frontend-service 3000:80
+
+# Port forward to API gateway
+kubectl port-forward -n emedicare svc/api-gateway-service 8085:8080
+```
+
+**Check Deployment Status:**
+
+```bash
+# View deployments
+kubectl get deployments -n emedicare
+
+# View services
+kubectl get svc -n emedicare
+
+# View pods
+kubectl get pods -n emedicare
+
+# View logs
+kubectl logs -f deployment/api-gateway -n emedicare
+```
+
+**For detailed Kubernetes deployment instructions, see [k8s/DEPLOYMENT-GUIDE.md](k8s/DEPLOYMENT-GUIDE.md)**
 curl http://localhost:5009/health
 ```
 

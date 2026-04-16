@@ -1,14 +1,21 @@
-# ══════════════════════════════════════════════════════════════
-# eMediCare — All Microservices K8s Deployments + Services
-# ══════════════════════════════════════════════════════════════
-
-# ──────────────────────────────────────────────────────────────
-# Auth Service  (port 5001)
-# ──────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: emedicare
+spec:
+  type: ClusterIP
+  selector:
+    app: auth-service
+  ports:
+    - port: 5001
+      targetPort: 5001
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: auth-service
+  namespace: emedicare
   labels:
     app: auth-service
 spec:
@@ -22,45 +29,43 @@ spec:
         app: auth-service
     spec:
       containers:
-        - name: auth-service
-          image: emedicare/auth-service:latest
-          ports:
-            - containerPort: 5001
-          env:
-            - name: PORT
-              value: "5001"
-            - name: MONGO_URI
-              valueFrom:
-                secretKeyRef:
-                  name: emedicare-secrets
-                  key: MONGO_URI_AUTH
-            - name: JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: emedicare-secrets
-                  key: JWT_SECRET
+      - name: auth-service
+        image: emedicare/auth-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5001
+        env:
+        - name: PORT
+          value: "5001"
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: MONGO_URI_AUTH
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: JWT_SECRET
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth-service
+  name: appointment-service
+  namespace: emedicare
 spec:
-  selector:
-    app: auth-service
-  ports:
-    - port: 5001
-      targetPort: 5001
   type: ClusterIP
+  selector:
+    app: appointment-service
+  ports:
+    - port: 5002
+      targetPort: 5002
 ---
-# ──────────────────────────────────────────────────────────────
-# Appointment Service  (port 5002)
-# ──────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: appointment-service
-  labels:
-    app: appointment-service
+  namespace: emedicare
 spec:
   replicas: 2
   selector:
@@ -72,40 +77,36 @@ spec:
         app: appointment-service
     spec:
       containers:
-        - name: appointment-service
-          image: emedicare/appointment-service:latest
-          ports:
-            - containerPort: 5002
-          env:
-            - name: PORT
-              value: "5002"
-            - name: MONGO_URI
-              valueFrom:
-                secretKeyRef:
-                  name: emedicare-secrets
-                  key: MONGO_URI_APPOINTMENTS
+      - name: appointment-service
+        image: emedicare/appointment-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5002
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: MONGO_URI_APPOINTMENTS
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: appointment-service
+  name: payment-service
+  namespace: emedicare
 spec:
-  selector:
-    app: appointment-service
-  ports:
-    - port: 5002
-      targetPort: 5002
   type: ClusterIP
+  selector:
+    app: payment-service
+  ports:
+    - port: 5003
+      targetPort: 5003
 ---
-# ──────────────────────────────────────────────────────────────
-# Payment Service  (port 5003)
-# ──────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: payment-service
-  labels:
-    app: payment-service
+  namespace: emedicare
 spec:
   replicas: 1
   selector:
@@ -117,40 +118,61 @@ spec:
         app: payment-service
     spec:
       containers:
-        - name: payment-service
-          image: emedicare/payment-service:latest
-          ports:
-            - containerPort: 5003
-          env:
-            - name: PORT
-              value: "5003"
-            - name: MONGO_URI
-              valueFrom:
-                secretKeyRef:
-                  name: emedicare-secrets
-                  key: MONGO_URI_PAYMENTS
+      - name: payment-service
+        image: emedicare/payment-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5003
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: MONGO_URI_PAYMENTS
+        - name: PAYMENTS_DB_URI
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: MONGO_URI_PAYMENTS
+        - name: STRIPE_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: STRIPE_SECRET_KEY
+        - name: STRIPE_SUCCESS_URL
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: STRIPE_SUCCESS_URL
+        - name: STRIPE_CANCEL_URL
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: STRIPE_CANCEL_URL
+        - name: STRIPE_WEBHOOK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: STRIPE_WEBHOOK_SECRET
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: payment-service
+  name: notification-service
+  namespace: emedicare
 spec:
-  selector:
-    app: payment-service
-  ports:
-    - port: 5003
-      targetPort: 5003
   type: ClusterIP
+  selector:
+    app: notification-service
+  ports:
+    - port: 5004
+      targetPort: 5004
 ---
-# ──────────────────────────────────────────────────────────────
-# Notification Service  (port 5004)
-# ──────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: notification-service
-  labels:
-    app: notification-service
+  namespace: emedicare
 spec:
   replicas: 1
   selector:
@@ -162,35 +184,36 @@ spec:
         app: notification-service
     spec:
       containers:
-        - name: notification-service
-          image: emedicare/notification-service:latest
-          ports:
-            - containerPort: 5004
-          env:
-            - name: PORT
-              value: "5004"
+      - name: notification-service
+        image: emedicare/notification-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5004
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: MONGO_URI_NOTIFICATION
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: notification-service
+  name: ai-service
+  namespace: emedicare
 spec:
-  selector:
-    app: notification-service
-  ports:
-    - port: 5004
-      targetPort: 5004
   type: ClusterIP
+  selector:
+    app: ai-service
+  ports:
+    - port: 5005
+      targetPort: 5005
 ---
-# ──────────────────────────────────────────────────────────────
-# AI Service  (port 5005)
-# ──────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ai-service
-  labels:
-    app: ai-service
+  namespace: emedicare
 spec:
   replicas: 1
   selector:
@@ -202,35 +225,36 @@ spec:
         app: ai-service
     spec:
       containers:
-        - name: ai-service
-          image: emedicare/ai-service:latest
-          ports:
-            - containerPort: 5005
-          env:
-            - name: PORT
-              value: "5005"
+      - name: ai-service
+        image: emedicare/ai-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5005
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: MONGO_URI_AI
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: ai-service
+  name: doctor-service
+  namespace: emedicare
 spec:
-  selector:
-    app: ai-service
-  ports:
-    - port: 5005
-      targetPort: 5005
   type: ClusterIP
+  selector:
+    app: doctor-service
+  ports:
+    - port: 5006
+      targetPort: 5006
 ---
-# ──────────────────────────────────────────────────────────────
-# Doctor Service  (port 5006)
-# ──────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: doctor-service
-  labels:
-    app: doctor-service
+  namespace: emedicare
 spec:
   replicas: 2
   selector:
@@ -242,40 +266,49 @@ spec:
         app: doctor-service
     spec:
       containers:
-        - name: doctor-service
-          image: emedicare/doctor-service:latest
-          ports:
-            - containerPort: 5006
-          env:
-            - name: PORT
-              value: "5006"
-            - name: MONGO_URI
-              valueFrom:
-                secretKeyRef:
-                  name: emedicare-secrets
-                  key: MONGO_URI_DOCTORS
+      - name: doctor-service
+        image: emedicare/doctor-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5006
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: MONGO_URI_DOCTORS
+        - name: AUTH_SERVICE_URL
+          value: "http://auth-service:5001/api/auth"
+        - name: APPOINTMENT_SERVICE_URL
+          value: "http://appointment-service:5002/api/appointments"
+        - name: PATIENT_SERVICE_URL
+          value: "http://patient-service:5007/api/patients"
+        - name: TELEMEDICINE_SERVICE_URL
+          value: "http://telemedicine-service:5008/api/telemedicine"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: JWT_SECRET
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: doctor-service
+  name: patient-service
+  namespace: emedicare
 spec:
-  selector:
-    app: doctor-service
-  ports:
-    - port: 5006
-      targetPort: 5006
   type: ClusterIP
+  selector:
+    app: patient-service
+  ports:
+    - port: 5007
+      targetPort: 5007
 ---
-# ──────────────────────────────────────────────────────────────
-# Patient Service  (port 5007)
-# ──────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: patient-service
-  labels:
-    app: patient-service
+  namespace: emedicare
 spec:
   replicas: 2
   selector:
@@ -287,40 +320,36 @@ spec:
         app: patient-service
     spec:
       containers:
-        - name: patient-service
-          image: emedicare/patient-service:latest
-          ports:
-            - containerPort: 5007
-          env:
-            - name: PORT
-              value: "5007"
-            - name: MONGO_URI
-              valueFrom:
-                secretKeyRef:
-                  name: emedicare-secrets
-                  key: MONGO_URI_PATIENTS
+      - name: patient-service
+        image: emedicare/patient-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5007
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: MONGO_URI_PATIENTS
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: patient-service
+  name: telemedicine-service
+  namespace: emedicare
 spec:
-  selector:
-    app: patient-service
-  ports:
-    - port: 5007
-      targetPort: 5007
   type: ClusterIP
+  selector:
+    app: telemedicine-service
+  ports:
+    - port: 5008
+      targetPort: 5008
 ---
-# ──────────────────────────────────────────────────────────────
-# Telemedicine Service  (port 5008)
-# ──────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: telemedicine-service
-  labels:
-    app: telemedicine-service
+  namespace: emedicare
 spec:
   replicas: 2
   selector:
@@ -332,40 +361,36 @@ spec:
         app: telemedicine-service
     spec:
       containers:
-        - name: telemedicine-service
-          image: emedicare/telemedicine-service:latest
-          ports:
-            - containerPort: 5008
-          env:
-            - name: PORT
-              value: "5008"
-            - name: MONGO_URI
-              valueFrom:
-                secretKeyRef:
-                  name: emedicare-secrets
-                  key: MONGO_URI_TELEMEDICINE
+      - name: telemedicine-service
+        image: emedicare/telemedicine-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5008
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: MONGO_URI_TELEMEDICINE
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: telemedicine-service
+  name: admin-service
+  namespace: emedicare
 spec:
-  selector:
-    app: telemedicine-service
-  ports:
-    - port: 5008
-      targetPort: 5008
   type: ClusterIP
+  selector:
+    app: admin-service
+  ports:
+    - port: 5009
+      targetPort: 5009
 ---
-# ──────────────────────────────────────────────────────────────
-# Admin Service  (port 5009)
-# ──────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: admin-service
-  labels:
-    app: admin-service
+  namespace: emedicare
 spec:
   replicas: 1
   selector:
@@ -377,27 +402,36 @@ spec:
         app: admin-service
     spec:
       containers:
-        - name: admin-service
-          image: emedicare/admin-service:latest
-          ports:
-            - containerPort: 5009
-          env:
-            - name: PORT
-              value: "5009"
-            - name: MONGO_URI
-              valueFrom:
-                secretKeyRef:
-                  name: emedicare-secrets
-                  key: MONGO_URI_ADMIN
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: admin-service
-spec:
-  selector:
-    app: admin-service
-  ports:
-    - port: 5009
-      targetPort: 5009
-  type: ClusterIP
+      - name: admin-service
+        image: emedicare/admin-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5009
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: MONGO_URI_ADMIN
+        - name: AUTH_SERVICE_URL
+          value: "http://auth-service:5001/api/auth"
+        - name: DOCTOR_SERVICE_URL
+          value: "http://doctor-service:5006/api/doctors"
+        - name: PATIENT_SERVICE_URL
+          value: "http://patient-service:5007/api/patients"
+        - name: APPOINTMENT_SERVICE_URL
+          value: "http://appointment-service:5002/api/appointments"
+        - name: PAYMENT_SERVICE_URL
+          value: "http://payment-service:5003/api/payments"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: emedicare-secrets
+              key: JWT_SECRET
+
+
+
+
+
+
+

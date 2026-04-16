@@ -1,0 +1,3 @@
+﻿Ô£à [Patient Service] MongoDB connected
+
+­ƒºæÔÇìÔÜò´©Å Patient Service running at http://localhost:5007

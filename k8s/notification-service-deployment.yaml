@@ -1,0 +1,51 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: emedicare
+  labels:
+    app: notification-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+      - name: notification-service
+        image: emedicare/notification-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5004
+          name: http
+        env:
+        - name: PORT
+          value: "5004"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: emedicare
+  labels:
+    app: notification-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5004
+    targetPort: 5004
+    protocol: TCP
+    name: http
+  selector:
+    app: notification-service
