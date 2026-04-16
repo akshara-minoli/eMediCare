@@ -126,7 +126,7 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       console.warn(`[Auth] Failed login: reason=user_not_found email=${normalizedEmail} ip=${clientIp}`);
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);

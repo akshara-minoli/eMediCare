@@ -39,6 +39,8 @@ export default function Login() {
 
       if (status === 502) {
         setError('Auth service is unavailable right now. Please try again in a moment.');
+      } else if (status === 401 || status === 404) {
+        setError('Invalid email or password. Please try again.');
       } else {
         setError(serverMessage || 'Login failed. Please try again.');
       }
