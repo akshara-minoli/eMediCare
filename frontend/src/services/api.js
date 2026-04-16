@@ -66,6 +66,7 @@ export const getAISymptomCatalog = () => API.get('/ai/symptoms');
 
 /* ── Notifications ────────────────────────────── */
 export const sendNotification = (data) => API.post('/notifications/send', data);
+export const getNotifications = (recipient) => API.get(`/notifications/${recipient}`);
 
 /* ── Telemedicine ─────────────────────────────── */
 export const createSession = (data) => API.post('/telemedicine/sessions', data);
