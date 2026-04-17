@@ -1,9 +1,11 @@
 const Session = require('../models/session.model');
 
+// Build public meeting link from the stored room id.
 function buildJoinUrl(roomId) {
   return `https://meet.jit.si/eMediCare-${roomId}`;
 }
 
+// Attach computed meeting URLs without mutating the persisted document.
 function serializeSession(sessionDoc) {
   const session = sessionDoc.toObject ? sessionDoc.toObject() : sessionDoc;
   return {
@@ -17,6 +19,7 @@ function sendBadRequest(res, message) {
   return res.status(400).json({ message });
 }
 
+// Create a telemedicine session directly from client-provided payload.
 async function createSession(req, res) {
   try {
     const appointmentId = String(req.body.appointmentId || '').trim();
@@ -65,6 +68,7 @@ async function createSession(req, res) {
 }
 
 async function createSessionFromAppointment(req, res) {
+  // Alternate entrypoint where appointmentId comes from route params.
   try {
     const appointmentId = String(req.params.appointmentId || '').trim();
     const doctorId = String(req.body.doctorId || '').trim();
@@ -111,6 +115,7 @@ async function createSessionFromAppointment(req, res) {
 }
 
 async function listSessions(req, res) {
+  // Support simple query-based filtering for dashboards.
   try {
     const filter = {};
     if (req.query.doctorId) filter.doctorId = String(req.query.doctorId).trim();
@@ -168,6 +173,7 @@ async function markWaiting(req, res) {
 }
 
 async function startSession(req, res) {
+  // Mark activation time only once so duration is computed correctly later.
   try {
     const session = await Session.findById(req.params.id);
     if (!session) return res.status(404).json({ message: 'Session not found' });
@@ -198,6 +204,7 @@ async function getJoinInfo(req, res) {
 }
 
 async function endSession(req, res) {
+  // Duration is rounded to whole minutes and never negative.
   try {
     const session = await Session.findById(req.params.id);
     if (!session) return res.status(404).json({ message: 'Session not found' });

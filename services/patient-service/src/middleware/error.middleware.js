@@ -6,10 +6,12 @@ const notFoundHandler = (req, res) => {
 };
 
 const errorHandler = (err, req, res, next) => {
+  // Delegate to Express default handler if response already started.
   if (res.headersSent) {
     return next(err);
   }
 
+  // Handle duplicate key errors from Mongo unique indexes.
   if (err && err.code === 11000) {
     const field = Object.keys(err.keyPattern || {})[0] || 'field';
     return res.status(409).json({
@@ -18,6 +20,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  // Flatten mongoose validation messages for client-friendly output.
   if (err.name === 'ValidationError') {
     const details = Object.values(err.errors || {}).map((e) => e.message);
     return res.status(400).json({

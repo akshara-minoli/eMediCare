@@ -15,6 +15,7 @@ const {
   validateMedicalHistoryBody,
 } = require('../middleware/validate.middleware');
 
+// Store uploaded reports on disk with a sanitized filename.
 const uploadDir = path.join(__dirname, '../../uploads/patient-reports');
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadDir),
@@ -27,6 +28,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 },
+  // Accept only PDF reports to match medical document requirements.
   fileFilter: (_req, file, cb) => {
     if (file.mimetype !== 'application/pdf') {
       return cb(new Error('Only PDF files are allowed'));
@@ -142,8 +144,12 @@ router.delete('/:userId', async (req, res) => {
   }
 });
 
+<<<<<<< Updated upstream
 // GET /api/patients/:userId
 // Fetch one patient profile by userId.
+=======
+// Profile + history management endpoints.
+>>>>>>> Stashed changes
 router.get('/:userId', validateUserIdParam, getPatientByUserId);
 
 // PUT /api/patients/:userId

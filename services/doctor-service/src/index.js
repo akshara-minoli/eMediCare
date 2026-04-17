@@ -14,7 +14,7 @@ app.use(express.json());
 
 // ── Database ──────────────────────────────────────────────────
 mongoose
-  .connect(process.env.DOCTOR_DB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/emedicare_doctors')
+  .connect(process.env.MONGO_URI || process.env.DOCTOR_DB_URI || 'mongodb://localhost:27017/emedicare_doctors')
   .then(() => {
     console.log(`✅ [Doctor Service] MongoDB connected (db: ${mongoose.connection.name})`);
   })

@@ -11,6 +11,7 @@ const PORT = Number(process.env.PORT || 5008);
 app.use(cors());
 app.use(express.json());
 
+// Prefer explicit telemedicine DB URI, then shared URI, then local fallback.
 const mongoUri =
   process.env.TELEMEDICINE_DB_URI ||
   process.env.MONGO_URI ||
@@ -31,6 +32,7 @@ app.get('/health', (req, res) => {
   });
 });
 
+// API surface for telemedicine scheduling and session lifecycle.
 app.use('/api/telemedicine', sessionRoutes);
 
 app.use((req, res) => {

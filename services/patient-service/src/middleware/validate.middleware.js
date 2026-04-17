@@ -1,5 +1,6 @@
 const isObject = (value) => value && typeof value === 'object' && !Array.isArray(value);
 
+// Validate and normalize :userId route param once for downstream handlers.
 const validateUserIdParam = (req, res, next) => {
   if (!req.params.userId || typeof req.params.userId !== 'string' || !req.params.userId.trim()) {
     return res.status(400).json({ success: false, message: 'Valid userId parameter is required' });
@@ -9,6 +10,7 @@ const validateUserIdParam = (req, res, next) => {
   return next();
 };
 
+// Validate required create payload fields and basic shape checks.
 const validateCreatePatientBody = (req, res, next) => {
   const { userId, name, email } = req.body;
 
@@ -52,6 +54,7 @@ const validateCreatePatientBody = (req, res, next) => {
   return next();
 };
 
+// Restrict update payload to mutable profile fields only.
 const validateUpdatePatientBody = (req, res, next) => {
   if (!req.body || !isObject(req.body)) {
     return res.status(400).json({ success: false, message: 'Update payload must be an object' });
@@ -71,6 +74,7 @@ const validateUpdatePatientBody = (req, res, next) => {
   return next();
 };
 
+// Validate one medical-history entry before append.
 const validateMedicalHistoryBody = (req, res, next) => {
   const { condition, diagnosedAt } = req.body;
 

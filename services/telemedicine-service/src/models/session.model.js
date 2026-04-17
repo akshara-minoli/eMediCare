@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Session document tracks one doctor-patient consultation lifecycle.
 const sessionSchema = new mongoose.Schema(
   {
     appointmentId: {
@@ -67,6 +68,7 @@ const sessionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Common dashboard queries are optimized with compound indexes.
 sessionSchema.index({ doctorId: 1, scheduledAt: -1 });
 sessionSchema.index({ patientId: 1, scheduledAt: -1 });
 sessionSchema.index({ appointmentId: 1 }, { unique: true });

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Patient profile keeps demographics, clinical snapshots, and uploaded report metadata.
 const patientSchema = new mongoose.Schema(
   {
     userId: {
@@ -39,6 +40,7 @@ const patientSchema = new mongoose.Schema(
       enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', ''],
       default: '',
     },
+    // Embedded address avoids extra joins for common profile reads.
     address: {
       street:  { type: String, default: '' },
       city:    { type: String, default: '' },
@@ -53,6 +55,7 @@ const patientSchema = new mongoose.Schema(
         notes:      { type: String },
       },
     ],
+    // Metadata only; the actual file is served from uploads directory.
     reports: [
       {
         originalName: { type: String, required: true },

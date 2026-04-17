@@ -17,12 +17,20 @@ const {
   validateEndSessionBody,
 } = require('../middleware/validate.middleware');
 
+<<<<<<< Updated upstream
 // Session creation and lifecycle routes.
+=======
+// Session CRUD and lifecycle endpoints.
+>>>>>>> Stashed changes
 router.post('/sessions', validateCreateSessionBody, createSession);
 router.get('/sessions', listSessions);
 router.get('/sessions/:id', validateSessionIdParam, getSessionById);
 router.get('/sessions/room/:roomId', validateRoomIdParam, getSessionByRoom);
+
+// Appointment-driven session creation endpoint.
 router.post('/appointments/:appointmentId/session', createSessionFromAppointment);
+
+// Session state transition endpoints.
 router.patch('/sessions/:id/waiting', validateSessionIdParam, markWaiting);
 router.patch('/sessions/:id/start', validateSessionIdParam, startSession);
 router.get('/sessions/:id/join', validateSessionIdParam, getJoinInfo);

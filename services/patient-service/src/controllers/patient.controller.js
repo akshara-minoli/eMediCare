@@ -1,6 +1,10 @@
 const Patient = require('../models/patient.model');
 
+<<<<<<< Updated upstream
 // Keep only allowed fields when building update payloads.
+=======
+// Pick only allowed keys and ignore undefined values for safe partial updates.
+>>>>>>> Stashed changes
 const pickDefined = (payload, allowedFields) => {
   const out = {};
   allowedFields.forEach((field) => {
@@ -11,7 +15,11 @@ const pickDefined = (payload, allowedFields) => {
   return out;
 };
 
+<<<<<<< Updated upstream
 // Normalize incoming patient data before writing to MongoDB.
+=======
+// Normalize user-facing strings and arrays before persistence.
+>>>>>>> Stashed changes
 const normalizePatientPayload = (payload) => {
   const data = { ...payload };
 
@@ -53,7 +61,11 @@ const normalizePatientPayload = (payload) => {
   return data;
 };
 
+<<<<<<< Updated upstream
 // GET one patient profile using auth userId.
+=======
+// Fetch patient profile by the auth-service user id.
+>>>>>>> Stashed changes
 const getPatientByUserId = async (req, res, next) => {
   try {
     const patient = await Patient.findOne({ userId: req.params.userId });
@@ -67,7 +79,11 @@ const getPatientByUserId = async (req, res, next) => {
   }
 };
 
+<<<<<<< Updated upstream
 // CREATE patient profile after registration.
+=======
+// Create a new patient profile after duplicate checks.
+>>>>>>> Stashed changes
 const createPatient = async (req, res, next) => {
   try {
     const payload = normalizePatientPayload(req.body);
@@ -90,7 +106,11 @@ const createPatient = async (req, res, next) => {
   }
 };
 
+<<<<<<< Updated upstream
 // UPDATE editable patient profile fields.
+=======
+// Update only whitelist fields to avoid accidental schema mutations.
+>>>>>>> Stashed changes
 const updatePatient = async (req, res, next) => {
   try {
     const allowedFields = [
@@ -126,7 +146,11 @@ const updatePatient = async (req, res, next) => {
   }
 };
 
+<<<<<<< Updated upstream
 // ADD one medical history entry to an existing patient.
+=======
+// Append one medical history record while keeping previous records intact.
+>>>>>>> Stashed changes
 const addMedicalHistory = async (req, res, next) => {
   try {
     const medicalEntry = {

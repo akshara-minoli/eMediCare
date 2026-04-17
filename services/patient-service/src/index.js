@@ -15,12 +15,14 @@ const PORT = process.env.PORT || 5007;
 app.use(cors());
 app.use(express.json());
 
+// Ensure the report upload directory exists before serving static files.
 const reportsDir = path.join(__dirname, '../uploads/patient-reports');
 fs.mkdirSync(reportsDir, { recursive: true });
 app.use('/api/patients/reports', express.static(reportsDir));
 
 // ── Database ──────────────────────────────────────────────────
 const connectDB = async () => {
+  // Prefer service-specific URI and fall back to generic URI if needed.
   const mongoUri = process.env.PATIENTS_DB_URI || process.env.MONGO_URI;
 
   if (!mongoUri) {
@@ -46,6 +48,7 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // ── Start ─────────────────────────────────────────────────────
+// Boot server only after DB connection succeeds.
 connectDB()
   .then(() => {
     const server = app.listen(PORT, () => {

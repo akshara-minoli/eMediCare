@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/user.model');
+const LegacyUser = require('../models/legacy-user.model');
 
 function requireAdmin(req, res, next) {
   try {
@@ -123,13 +124,39 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const user = await User.findOne({ email: normalizedEmail });
+    let user = await User.findOne({ email: normalizedEmail });
+    let isMatch = user ? await bcrypt.compare(password, user.password) : false;
+
+    // Fall back to legacy users collection so older doctor/patient accounts still work.
+    if (!isMatch) {
+      const legacyUser = await LegacyUser.findOne({ email: normalizedEmail });
+      if (legacyUser && await bcrypt.compare(password, legacyUser.password)) {
+        isMatch = true;
+
+        user = await User.findOneAndUpdate(
+          { email: normalizedEmail },
+          {
+            $set: {
+              name: legacyUser.name,
+              email: legacyUser.email,
+              password: legacyUser.password,
+              role: legacyUser.role,
+              avatar: legacyUser.avatar || '',
+              isVerified: Boolean(legacyUser.isVerified),
+            },
+          },
+          { upsert: true, new: true, runValidators: true }
+        );
+
+        console.info(`[Auth] Legacy login synced for email=${normalizedEmail} ip=${clientIp}`);
+      }
+    }
+
     if (!user) {
       console.warn(`[Auth] Failed login: reason=user_not_found email=${normalizedEmail} ip=${clientIp}`);
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       console.warn(`[Auth] Failed login: reason=invalid_password email=${normalizedEmail} ip=${clientIp}`);
       return res.status(401).json({ message: 'Invalid credentials' });

@@ -252,7 +252,7 @@ router.put('/appointments/:id/status', doctorAuth, async (req, res) => {
       payload.confirmedByDoctorUserId = doctor.userId;
     }
 
-    const response = await clients.appointment.put(`/${req.params.id}/status`, payload);
+    const response = await clients.appointment.patch(`/${req.params.id}/status`, payload);
     res.json(response.data);
   } catch (err) {
     res.status(err.response?.status || 500).json({

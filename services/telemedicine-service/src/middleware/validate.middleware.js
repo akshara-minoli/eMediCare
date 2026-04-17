@@ -1,3 +1,4 @@
+// Validate minimal fields required to schedule a telemedicine session.
 function validateCreateSessionBody(req, res, next) {
   const appointmentId = String(req.body.appointmentId || '').trim();
   const doctorId = String(req.body.doctorId || '').trim();
@@ -17,6 +18,7 @@ function validateCreateSessionBody(req, res, next) {
   next();
 }
 
+// Keep id param checks lightweight; Mongoose handles invalid ObjectId at query time.
 function validateSessionIdParam(req, res, next) {
   const sessionId = String(req.params.id || '').trim();
   if (!sessionId) return res.status(400).json({ message: 'Session id is required' });
@@ -29,6 +31,7 @@ function validateRoomIdParam(req, res, next) {
   next();
 }
 
+// Reusable status validator for endpoints that accept explicit status values.
 function validateStatusBody(req, res, next) {
   const status = String(req.body.status || '').trim();
   if (!status) return res.status(400).json({ message: 'status is required' });
@@ -41,6 +44,7 @@ function validateStatusBody(req, res, next) {
   next();
 }
 
+// Notes/prescription are optional but must be strings when present.
 function validateEndSessionBody(req, res, next) {
   const notes = req.body.notes;
   const prescription = req.body.prescription;
