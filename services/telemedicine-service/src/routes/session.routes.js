@@ -17,11 +17,7 @@ const {
   validateEndSessionBody,
 } = require('../middleware/validate.middleware');
 
-<<<<<<< Updated upstream
-// Session creation and lifecycle routes.
-=======
 // Session CRUD and lifecycle endpoints.
->>>>>>> Stashed changes
 router.post('/sessions', validateCreateSessionBody, createSession);
 router.get('/sessions', listSessions);
 router.get('/sessions/:id', validateSessionIdParam, getSessionById);

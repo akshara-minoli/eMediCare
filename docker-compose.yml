@@ -59,10 +59,7 @@ services:
       - "5001:5001"
     environment:
       - PORT=5001
-<<<<<<< Updated upstream
-=======
       - MONGO_URI=mongodb+srv://eMediCare_user:Emed123@cluster0.ov7af0p.mongodb.net/auth_db
->>>>>>> Stashed changes
       - JWT_SECRET=change_this_secret_in_production
       - FRONTEND_URL=http://localhost:5173
     depends_on:
@@ -83,10 +80,7 @@ services:
       - "5002:5002"
     environment:
       - PORT=5002
-<<<<<<< Updated upstream
-=======
       - MONGO_URI=mongodb+srv://eMediCare_user:Emed123@cluster0.ov7af0p.mongodb.net/appointments_db
->>>>>>> Stashed changes
     depends_on:
       - mongo
     networks:
@@ -129,11 +123,7 @@ services:
       - "5004:5004"
     environment:
       - PORT=5004
-<<<<<<< Updated upstream
-      - MONGO_URI=${NOTIFICATION_MONGO_URI:-mongodb+srv://eMediCare_user:Emed123@cluster0.ov7af0p.mongodb.net/notification_db}
-=======
       - MONGO_URI=mongodb+srv://eMediCare_user:Emed123@cluster0.ov7af0p.mongodb.net/notification_db
->>>>>>> Stashed changes
     networks:
       - emedicare-network
 
@@ -164,10 +154,7 @@ services:
       - "5006:5006"
     environment:
       - PORT=5006
-<<<<<<< Updated upstream
-=======
       - MONGO_URI=mongodb+srv://eMediCare_user:Emed123@cluster0.ov7af0p.mongodb.net/doctor_db
->>>>>>> Stashed changes
       - JWT_SECRET=change_this_secret_in_production
       - AUTH_SERVICE_URL=http://auth-service:5001/api/auth
       - APPOINTMENT_SERVICE_URL=http://appointment-service:5002/api/appointments
@@ -191,10 +178,7 @@ services:
       - "5007:5007"
     environment:
       - PORT=5007
-<<<<<<< Updated upstream
-=======
       - MONGO_URI=mongodb+srv://eMediCare_user:Emed123@cluster0.ov7af0p.mongodb.net/patients_db
->>>>>>> Stashed changes
     depends_on:
       - mongo
     networks:
@@ -230,10 +214,7 @@ services:
       - "5009:5009"
     environment:
       - PORT=5009
-<<<<<<< Updated upstream
-=======
       - MONGO_URI=mongodb+srv://eMediCare_user:Emed123@cluster0.ov7af0p.mongodb.net/admin_db
->>>>>>> Stashed changes
       - JWT_SECRET=change_this_secret_in_production
       - AUTH_SERVICE_URL=http://auth-service:5001/api/auth
       - DOCTOR_SERVICE_URL=http://doctor-service:5006/api/doctors

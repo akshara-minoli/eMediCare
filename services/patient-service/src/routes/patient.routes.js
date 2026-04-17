@@ -144,12 +144,9 @@ router.delete('/:userId', async (req, res) => {
   }
 });
 
-<<<<<<< Updated upstream
 // GET /api/patients/:userId
 // Fetch one patient profile by userId.
-=======
 // Profile + history management endpoints.
->>>>>>> Stashed changes
 router.get('/:userId', validateUserIdParam, getPatientByUserId);
 
 // PUT /api/patients/:userId
