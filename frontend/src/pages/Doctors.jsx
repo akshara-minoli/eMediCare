@@ -298,41 +298,57 @@ export default function Doctors() {
                 <button type="button" onClick={closeBooking} className="btn-ghost text-xs px-3 py-2">Close</button>
               </div>
 
-              <form onSubmit={handleBooking} className="space-y-3">
+              <form onSubmit={handleBooking} className="space-y-4">
+                {/* Available Dates */}
                 <div>
-                  <label className="form-label">Date</label>
-                  <input
-                    type="datetime-local"
-                    className="form-input"
-                    value={bookingForm.date ? new Date(bookingForm.date).toISOString().slice(0, 16) : ''}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setBookingForm((prev) => ({
-                        ...prev,
-                        date: value ? new Date(value).toISOString() : '',
-                      }));
-                    }}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="form-label">Time Slot</label>
-                  <select
-                    className="form-input"
-                    value={bookingForm.time}
-                    onChange={(e) => setBookingForm((prev) => ({ ...prev, time: e.target.value }))}
-                    required
-                  >
-                    {getSlotOptions(bookingDoctor._id).length > 0 ? (
-                      getSlotOptions(bookingDoctor._id).map((slot, idx) => (
-                        <option key={`${slot.label}-${idx}`} value={slot.time}>{slot.label}</option>
+                  <label className="form-label">Available Dates</label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {availabilityByDoctor[bookingDoctor._id]?.length > 0 ? (
+                      availabilityByDoctor[bookingDoctor._id].map((avail) => (
+                        <button
+                          key={avail._id}
+                          type="button"
+                          onClick={() => setBookingForm(prev => ({ ...prev, date: avail.date, time: '' }))}
+                          className={`px-3 py-2 rounded-xl border text-xs transition-all ${
+                            bookingForm.date === avail.date 
+                            ? 'border-primary bg-primary/10 text-primary font-bold' 
+                            : 'border-white/10 bg-white/5 text-white/60 hover:border-white/30'
+                          }`}
+                        >
+                          {new Date(avail.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </button>
                       ))
                     ) : (
-                      <option value="10:00-11:00">No schedule found - default 10:00-11:00</option>
+                      <p className="text-white/40 text-xs">No scheduled dates available.</p>
                     )}
-                  </select>
+                  </div>
                 </div>
+
+                {/* Time Slots */}
+                {bookingForm.date && (
+                  <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="form-label">Available Time Slots</label>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {availabilityByDoctor[bookingDoctor._id]
+                        ?.find(a => a.date === bookingForm.date)
+                        ?.timeSlots.map((slot) => (
+                          <button
+                            key={slot}
+                            type="button"
+                            onClick={() => setBookingForm(prev => ({ ...prev, time: slot }))}
+                            className={`p-2 rounded-lg border text-xs transition-all ${
+                              bookingForm.time === slot 
+                              ? 'border-primary bg-primary text-white font-bold' 
+                              : 'border-white/10 bg-white/5 text-white/60 hover:border-white/30'
+                            }`}
+                          >
+                            {formatSlot24Hour(slot)}
+                          </button>
+                        ))
+                      }
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="form-label">Consultation Type</label>
@@ -341,9 +357,9 @@ export default function Doctors() {
                     value={bookingForm.type}
                     onChange={(e) => setBookingForm((prev) => ({ ...prev, type: e.target.value }))}
                   >
-                    <option value="video">Video</option>
-                    <option value="in-person">In Person</option>
-                    <option value="phone">Phone</option>
+                    <option value="video">Video Consultation</option>
+                    <option value="in-person">In-Person Visit</option>
+                    <option value="phone">Phone Call</option>
                   </select>
                 </div>
 
