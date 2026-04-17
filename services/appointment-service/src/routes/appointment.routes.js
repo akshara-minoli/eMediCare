@@ -1,163 +1,30 @@
 const router = require('express').Router();
-const Appointment = require('../models/appointment.model');
+const appointmentController = require('../controllers/appointment.controller');
 
-// ── GET /api/appointments ─────────────────────────────────────
+// GET /api/appointments
 // Query params: patientId, doctorId, status
-router.get('/', async (req, res) => {
-  try {
-    const { patientId, doctorId, status } = req.query;
-    const filter = {};
-    if (patientId) filter.patientId = patientId;
-    if (doctorId)  filter.doctorId  = doctorId;
-    if (status)    filter.status    = status;
+router.get('/', appointmentController.getAppointments);
 
-    const appointments = await Appointment.find(filter).sort({ date: 1, time: 1 });
-    res.json({ appointments });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+// GET /api/appointments/:id
+router.get('/:id', appointmentController.getAppointmentById);
 
-// ── GET /api/appointments/:id ─────────────────────────────────
-router.get('/:id', async (req, res) => {
-  try {
-    const appointment = await Appointment.findById(req.params.id);
-    if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
-    res.json({ appointment });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
-// ── POST /api/appointments/book ───────────────────────────────
+// POST /api/appointments/book
 // Prevents double-booking: same doctor + same date + same time slot
-router.post('/book', async (req, res) => {
-  try {
-    const { patientId, doctorId, date, time, type, notes } = req.body;
+router.post('/book', appointmentController.bookAppointment);
 
-    if (!patientId || !doctorId || !date || !time) {
-      return res.status(400).json({ message: 'patientId, doctorId, date, and time are required.' });
-    }
+// PATCH /api/appointments/:id/status
+router.patch('/:id/status', appointmentController.updateAppointmentStatus);
 
-    // ── Double-booking prevention ─────────────────────────────
-    const normalizedDate = new Date(date);
-    normalizedDate.setUTCHours(0, 0, 0, 0);
-    const nextDay = new Date(normalizedDate);
-    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+// PUT /api/appointments/:id/status — alias for integrations
+router.put('/:id/status', appointmentController.updateAppointmentStatus);
 
-    const existing = await Appointment.findOne({
-      doctorId,
-      time,
-      date: { $gte: normalizedDate, $lt: nextDay },
-      status: { $in: ['pending', 'confirmed'] },
-    });
+// PUT /api/appointments/:id — update full appointment
+router.put('/:id', appointmentController.updateAppointment);
 
-    if (existing) {
-      return res.status(409).json({
-        message: 'This time slot is already booked for the selected doctor. Please choose a different time.',
-      });
-    }
+// DELETE /api/appointments/admin/:id — hard delete (for admin dashboard)
+router.delete('/admin/:id', appointmentController.deleteAppointment);
 
-    // ── Also prevent same patient booking same doctor same slot ─
-    const patientConflict = await Appointment.findOne({
-      patientId,
-      date: { $gte: normalizedDate, $lt: nextDay },
-      time,
-      status: { $in: ['pending', 'confirmed'] },
-    });
-
-    if (patientConflict) {
-      return res.status(409).json({
-        message: 'You already have an appointment at this date and time.',
-      });
-    }
-
-    const appointment = await Appointment.create({
-      patientId,
-      doctorId,
-      date: normalizedDate,
-      time,
-      type: type || 'in-person',
-      notes: notes || '',
-    });
-
-    res.status(201).json({ message: 'Appointment booked successfully', appointment });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
-// ── PATCH /api/appointments/:id/status ───────────────────────
-router.patch('/:id/status', async (req, res) => {
-  try {
-    const { status } = req.body;
-    const allowed = ['pending', 'confirmed', 'completed', 'cancelled'];
-    if (!allowed.includes(status)) {
-      return res.status(400).json({ message: `Status must be one of: ${allowed.join(', ')}` });
-    }
-
-    const appointment = await Appointment.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
-    if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
-    res.json({ message: 'Status updated', appointment });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
-// ── PUT /api/appointments/:id/status — alias for integrations ─
-router.put('/:id/status', async (req, res) => {
-  try {
-    const { status } = req.body;
-    const appointment = await Appointment.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
-    if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
-    res.json({ message: 'Status updated', appointment });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
-// ── PUT /api/appointments/:id — update full appointment ───────
-router.put('/:id', async (req, res) => {
-  try {
-    const appointment = await Appointment.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
-    res.json({ message: 'Appointment updated', appointment });
-  } catch (err) {
-    res.status(400).json({ message: 'Update failed', error: err.message });
-  }
-});
-
-// ── DELETE /api/appointments/:id — cancel appointment ─────────
-router.delete('/:id', async (req, res) => {
-  try {
-    const appt = await Appointment.findById(req.params.id);
-    if (!appt) return res.status(404).json({ message: 'Appointment not found' });
-
-    // Only allow cancellation of pending or confirmed appointments
-    if (!['pending', 'confirmed'].includes(appt.status)) {
-      return res.status(400).json({
-        message: `Cannot cancel an appointment with status '${appt.status}'.`,
-      });
-    }
-
-    appt.status = 'cancelled';
-    await appt.save();
-
-    res.json({ message: 'Appointment cancelled successfully', appointment: appt });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+// DELETE /api/appointments/:id — cancel appointment (soft delete)
+router.delete('/:id', appointmentController.cancelAppointment);
 
 module.exports = router;

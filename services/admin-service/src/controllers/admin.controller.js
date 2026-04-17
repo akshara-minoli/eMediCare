@@ -297,7 +297,9 @@ exports.updateAppointment = async (req, res) => {
 
 exports.deleteAppointment = async (req, res) => {
   try {
-    const response = await clients.appointment.delete(`/${req.params.id}`);
+    const response = await clients.appointment.delete(`/admin/${req.params.id}`, {
+      headers: forwardAuthHeader(req),
+    });
     res.json(response.data);
   } catch (err) {
     handleError(res, err, 'Failed to delete appointment');

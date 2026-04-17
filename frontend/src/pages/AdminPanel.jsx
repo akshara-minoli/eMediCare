@@ -102,9 +102,19 @@ export default function AdminPanel() {
     [patients]
   );
 
+  const sortedAppointments = useMemo(
+    () => [...appointments].sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      if (dateB !== dateA) return dateB - dateA;
+      return (b.time || '').localeCompare(a.time || '');
+    }),
+    [appointments]
+  );
+
   const appointmentLabelMap = useMemo(
     () => new Map(
-      appointments.map((item) => {
+      sortedAppointments.map((item) => {
         const doctorName = doctorNameMap.get(String(item.doctorId)) || item.doctorId || 'Unknown doctor';
         const patientName = patientNameMap.get(String(item.patientId)) || item.patientId || 'Unknown patient';
         const dateLabel = item.date ? new Date(item.date).toLocaleDateString() : '-';
@@ -112,7 +122,7 @@ export default function AdminPanel() {
         return [String(item._id), `${doctorName} - ${patientName} (${dateLabel} ${timeLabel})`.trim()];
       })
     ),
-    [appointments, doctorNameMap, patientNameMap]
+    [sortedAppointments, doctorNameMap, patientNameMap]
   );
 
   const dateToInputValue = (value) => {
@@ -437,7 +447,7 @@ export default function AdminPanel() {
   };
 
   const exportAppointmentsPdf = () => {
-    const rows = appointments.map((item) => [
+    const rows = sortedAppointments.map((item) => [
       item._id || '-',
       doctorNameMap.get(String(item.doctorId)) || item.doctorId || '-',
       patientNameMap.get(String(item.patientId)) || item.patientId || '-',
@@ -778,17 +788,35 @@ export default function AdminPanel() {
                 </tr>
               </thead>
               <tbody>
-                {appointments.length === 0 && (
+                {sortedAppointments.length === 0 && (
                   <tr>
                     <td className="py-3 text-white/50" colSpan={5}>No appointments found.</td>
                   </tr>
                 )}
-                {appointments.map((item) => (
+                {sortedAppointments.map((item) => (
                   <tr key={item._id} className="border-b border-white/5">
-                    <td className="py-2 pr-3">{new Date(item.date).toLocaleDateString()} {item.time}</td>
-                    <td className="py-2 pr-3">{doctorNameMap.get(String(item.doctorId)) || item.doctorId}</td>
-                    <td className="py-2 pr-3">{patientNameMap.get(String(item.patientId)) || item.patientId}</td>
-                    <td className="py-2 pr-3 capitalize">{item.status}</td>
+                    <td className="py-2 pr-3">
+                      <div className="font-medium text-white">{new Date(item.date).toLocaleDateString()}</div>
+                      <div className="text-xs text-white/40">{item.time}</div>
+                    </td>
+                    <td className="py-2 pr-3">
+                      <div className="font-medium">{doctorNameMap.get(String(item.doctorId)) || "Doctor"}</div>
+                      <div className="text-[10px] text-white/30 truncate max-w-[100px]">{item.doctorId}</div>
+                    </td>
+                    <td className="py-2 pr-3">
+                      <div className="font-medium">{patientNameMap.get(String(item.patientId)) || "Patient"}</div>
+                      <div className="text-[10px] text-white/30 truncate max-w-[100px]">{item.patientId}</div>
+                    </td>
+                    <td className="py-2 pr-3">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        item.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-400' :
+                        item.status === 'cancelled' ? 'bg-rose-500/20 text-rose-400' :
+                        item.status === 'completed' ? 'bg-sky-500/20 text-sky-400' :
+                        'bg-amber-500/20 text-amber-400'
+                      }`}>
+                        {item.status}
+                      </span>
+                    </td>
                     <td className="py-2 pr-3 space-x-3">
                       <button
                         className="text-sky-300 hover:text-sky-100"
