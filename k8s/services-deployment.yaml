@@ -254,6 +254,19 @@ spec:
                 secretKeyRef:
                   name: emedicare-secrets
                   key: MONGO_URI_DOCTORS
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: emedicare-secrets
+                  key: JWT_SECRET
+            - name: AUTH_SERVICE_URL
+              value: "http://auth-service:5001/api/auth"
+            - name: APPOINTMENT_SERVICE_URL
+              value: "http://appointment-service:5002/api/appointments"
+            - name: PATIENT_SERVICE_URL
+              value: "http://patient-service:5007/api/patients"
+            - name: TELEMEDICINE_SERVICE_URL
+              value: "http://telemedicine-service:5008/api/telemedicine"
 ---
 apiVersion: v1
 kind: Service
@@ -389,6 +402,21 @@ spec:
                 secretKeyRef:
                   name: emedicare-secrets
                   key: MONGO_URI_ADMIN
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: emedicare-secrets
+                  key: JWT_SECRET
+            - name: AUTH_SERVICE_URL
+              value: "http://auth-service:5001/api/auth"
+            - name: DOCTOR_SERVICE_URL
+              value: "http://doctor-service:5006/api/doctors"
+            - name: PATIENT_SERVICE_URL
+              value: "http://patient-service:5007/api/patients"
+            - name: APPOINTMENT_SERVICE_URL
+              value: "http://appointment-service:5002/api/appointments"
+            - name: PAYMENT_SERVICE_URL
+              value: "http://payment-service:5003/api/payments"
 ---
 apiVersion: v1
 kind: Service
