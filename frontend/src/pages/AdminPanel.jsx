@@ -150,7 +150,11 @@ export default function AdminPanel() {
   };
 
   const navButtonClass = (view) =>
-    `btn-outline w-full justify-start ${activeView === view ? 'bg-primary/15 text-primary border-primary/30' : ''}`;
+    `flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+      activeView === view
+        ? 'bg-[#0A192F] text-white shadow-lg shadow-[#0A192F]/20'
+        : 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0A192F]'
+    }`;
 
   const handleLogout = () => {
     localStorage.removeItem('emedicare_token');
@@ -473,41 +477,41 @@ export default function AdminPanel() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-bg">
+      <main className="min-h-screen bg-[#F8FAFC]">
         <div className="max-w-6xl mx-auto px-6 py-12 flex justify-center">
-          <div className="w-10 h-10 border-4 border-bg-surface2 border-t-primary rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-[#D9E2EC] border-t-[#0A192F] rounded-full animate-spin" />
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-bg">
+    <main className="min-h-screen bg-[#F8FAFC] text-[#0A192F]">
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-10 flex gap-4 md:gap-6">
         <button
           type="button"
           onClick={() => setSidebarOpen((prev) => !prev)}
-          className="fixed top-4 left-4 z-40 btn-primary px-4 py-2"
+          className="fixed top-4 left-4 z-40 bg-[#0A192F] text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-[#0A192F]/20 hover:scale-105 active:scale-95 transition-all"
         >
-          {sidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
+          {sidebarOpen ? 'Hide Menu' : 'Show Menu'}
         </button>
 
         <aside
           className={`
             fixed top-0 left-0 z-30 h-screen
-            w-72 md:w-64 bg-bg-surface border-r border-white/10 p-4 md:rounded-r-2xl
+            w-72 md:w-64 bg-white border-r border-[#D9E2EC] p-6
             transition-transform duration-300 ease-out
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           `}
         >
           <div className="flex flex-col h-full">
-            <div>
-              <p className="section-tag mb-2">Admin Panel</p>
-              <h2 className="font-heading text-xl">Control Center</h2>
-              <p className="text-xs text-white/50 mt-1">{adminUser?.email || 'admin user'}</p>
+            <div className="mb-8">
+              <p className="inline-flex px-3 py-1 bg-[#0A192F]/5 border border-[#0A192F]/10 rounded-full text-[10px] font-bold text-[#0A192F] uppercase tracking-widest mb-3">Admin Panel</p>
+              <h2 className="font-heading text-xl font-extrabold text-[#0A192F]">Control Center</h2>
+              <p className="text-xs text-[#64748B] mt-1 font-medium">{adminUser?.email || 'admin@emedicare.com'}</p>
             </div>
 
-            <nav className="mt-6 space-y-2">
+            <nav className="space-y-2">
               <button type="button" onClick={() => openView('overview')} className={navButtonClass('overview')}>Overview</button>
               <button type="button" onClick={() => openView('doctors')} className={navButtonClass('doctors')}>Doctors</button>
               <button type="button" onClick={() => openView('patients')} className={navButtonClass('patients')}>Patients</button>
@@ -516,8 +520,8 @@ export default function AdminPanel() {
               <button type="button" onClick={() => openView('notifications')} className={navButtonClass('notifications')}>Notifications</button>
             </nav>
 
-            <div className="mt-auto pt-6 border-t border-white/10">
-              <button type="button" onClick={handleLogout} className="w-full bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-400/30 px-4 py-2 rounded-xl transition-colors">Logout</button>
+            <div className="mt-auto pt-6 border-t border-[#F1F5F9]">
+              <button type="button" onClick={handleLogout} className="w-full bg-red-50 text-red-600 font-bold px-4 py-3 rounded-xl hover:bg-red-100 transition-colors">Logout Account</button>
             </div>
           </div>
         </aside>
@@ -531,9 +535,9 @@ export default function AdminPanel() {
 
         <div className={`flex-1 min-w-0 space-y-8 transition-all duration-300 ${sidebarOpen ? 'md:pl-64' : ''}`}>
         <div>
-          <div className="section-tag mb-2">Admin Dashboard</div>
-          <h1 className="text-3xl font-heading font-bold">Platform Operations</h1>
-          <p className="text-sm text-white/50 mt-1">Secure admin control center powered through API Gateway.</p>
+          <p className="inline-flex px-3 py-1 bg-[#0A192F]/5 border border-[#0A192F]/10 rounded-full text-[10px] font-bold text-[#0A192F] uppercase tracking-widest mb-3">Admin Dashboard</p>
+          <h1 className="text-4xl font-heading font-extrabold text-[#0A192F]">Platform Operations</h1>
+          <p className="text-sm text-[#64748B] mt-1 font-medium">Secure admin control center powered through API Gateway.</p>
         </div>
 
         {error && <div className="alert-error">{error}</div>}
@@ -559,18 +563,18 @@ export default function AdminPanel() {
 
         {activeView === 'overview' && (
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="card">
-            <h2 className="font-heading text-xl mb-4">Create Doctor Account</h2>
-            <form onSubmit={submitCreateDoctor} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="bg-white/70 backdrop-blur-2xl border border-white rounded-[2.5rem] p-10 shadow-2xl shadow-[#0A192F]/5">
+            <h2 className="font-heading text-2xl font-bold mb-6 text-[#0A192F]">Create Doctor Account</h2>
+            <form onSubmit={submitCreateDoctor} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <input
-                className="form-input"
+                className="w-full px-5 py-4 bg-white/50 border border-[#D9E2EC] rounded-2xl text-sm text-[#0A192F] placeholder-[#94A3B8] focus:outline-none focus:border-[#0A192F] focus:ring-4 focus:ring-[#0A192F]/5 transition-all"
                 placeholder="Doctor name"
                 value={doctorForm.name}
                 onChange={(e) => setDoctorForm((prev) => ({ ...prev, name: e.target.value }))}
                 required
               />
               <input
-                className="form-input"
+                className="w-full px-5 py-4 bg-white/50 border border-[#D9E2EC] rounded-2xl text-sm text-[#0A192F] placeholder-[#94A3B8] focus:outline-none focus:border-[#0A192F] focus:ring-4 focus:ring-[#0A192F]/5 transition-all"
                 type="email"
                 placeholder="Doctor email"
                 value={doctorForm.email}
@@ -579,7 +583,7 @@ export default function AdminPanel() {
               />
               <div className="relative">
                 <input
-                  className="form-input pr-20"
+                  className="w-full px-5 py-4 bg-white/50 border border-[#D9E2EC] rounded-2xl text-sm text-[#0A192F] placeholder-[#94A3B8] focus:outline-none focus:border-[#0A192F] focus:ring-4 focus:ring-[#0A192F]/5 transition-all pr-20"
                   type={showDoctorPassword ? 'text' : 'password'}
                   placeholder="Temporary password"
                   value={doctorForm.password}
@@ -589,19 +593,19 @@ export default function AdminPanel() {
                 <button
                   type="button"
                   onClick={() => setShowDoctorPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/60 hover:text-white transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#64748B] hover:text-[#0A192F] uppercase tracking-widest transition-colors"
                 >
                   {showDoctorPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
               <input
-                className="form-input"
+                className="w-full px-5 py-4 bg-white/50 border border-[#D9E2EC] rounded-2xl text-sm text-[#0A192F] placeholder-[#94A3B8] focus:outline-none focus:border-[#0A192F] focus:ring-4 focus:ring-[#0A192F]/5 transition-all"
                 placeholder="Phone"
                 value={doctorForm.phone}
                 onChange={(e) => setDoctorForm((prev) => ({ ...prev, phone: e.target.value }))}
               />
               <input
-                className="form-input"
+                className="w-full px-5 py-4 bg-white/50 border border-[#D9E2EC] rounded-2xl text-sm text-[#0A192F] placeholder-[#94A3B8] focus:outline-none focus:border-[#0A192F] focus:ring-4 focus:ring-[#0A192F]/5 transition-all"
                 type="number"
                 min="0"
                 placeholder="Experience (years)"
@@ -609,7 +613,7 @@ export default function AdminPanel() {
                 onChange={(e) => setDoctorForm((prev) => ({ ...prev, experience: e.target.value }))}
               />
               <input
-                className="form-input"
+                className="w-full px-5 py-4 bg-white/50 border border-[#D9E2EC] rounded-2xl text-sm text-[#0A192F] placeholder-[#94A3B8] focus:outline-none focus:border-[#0A192F] focus:ring-4 focus:ring-[#0A192F]/5 transition-all"
                 type="number"
                 min="0"
                 placeholder="Consultation fee"
@@ -617,7 +621,7 @@ export default function AdminPanel() {
                 onChange={(e) => setDoctorForm((prev) => ({ ...prev, consultationFee: e.target.value }))}
               />
               <select
-                className="form-input sm:col-span-2"
+                className="w-full px-5 py-4 bg-white/50 border border-[#D9E2EC] rounded-2xl text-sm text-[#0A192F] focus:outline-none focus:border-[#0A192F] focus:ring-4 focus:ring-[#0A192F]/5 transition-all sm:col-span-2"
                 value={doctorForm.specialty}
                 onChange={(e) => setDoctorForm((prev) => ({ ...prev, specialty: e.target.value }))}
               >
@@ -628,33 +632,33 @@ export default function AdminPanel() {
               <button
                 type="submit"
                 disabled={busy === 'create-doctor'}
-                className="btn-primary sm:col-span-2 justify-center"
+                className="w-full py-4 bg-[#0A192F] text-white font-bold rounded-2xl shadow-xl shadow-[#0A192F]/20 hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed transition-all sm:col-span-2"
               >
-                {busy === 'create-doctor' ? 'Creating...' : 'Create Doctor'}
+                {busy === 'create-doctor' ? 'Creating...' : 'Create Doctor Account'}
               </button>
             </form>
           </div>
 
-          <div className="card">
-            <h2 className="font-heading text-xl mb-4">Pending Doctor Verification</h2>
-            <div className="space-y-3 max-h-80 overflow-auto pr-1">
-              {pendingDoctors.length === 0 && <p className="text-sm text-white/50">No pending doctors.</p>}
+          <div className="bg-white/70 backdrop-blur-2xl border border-white rounded-[2.5rem] p-10 shadow-2xl shadow-[#0A192F]/5">
+            <h2 className="font-heading text-2xl font-bold mb-6 text-[#0A192F]">Pending Doctor Verification</h2>
+            <div className="space-y-4 max-h-80 overflow-auto pr-2 custom-scrollbar">
+              {pendingDoctors.length === 0 && <p className="text-sm text-[#64748B] font-medium italic">No pending doctors for review.</p>}
               {pendingDoctors.map((doc) => (
-                <div key={doc._id} className="border border-white/10 rounded-xl p-3 flex items-center justify-between gap-3">
+                <div key={doc._id} className="bg-white/50 border border-[#D9E2EC] rounded-2xl p-5 flex items-center justify-between gap-4 transition-all hover:border-[#0A192F]/20">
                   <div>
-                    <p className="font-medium">{doc.name}</p>
-                    <p className="text-xs text-white/50">{doc.email} · {doc.specialty}</p>
+                    <p className="font-bold text-[#0A192F]">{doc.name}</p>
+                    <p className="text-xs text-[#64748B] font-medium">{doc.email} · {doc.specialty}</p>
                   </div>
                   <div className="flex gap-2">
                     <button
-                      className="btn-primary text-xs px-3 py-1"
+                      className="bg-[#0A192F] text-white text-[11px] font-bold px-4 py-2 rounded-xl shadow-lg shadow-[#0A192F]/10 hover:scale-105 active:scale-95 transition-all"
                       disabled={busy === `approve-${doc._id}`}
                       onClick={() => withBusy(`approve-${doc._id}`, () => updateAdminDoctorStatus(doc._id, 'approved'))}
                     >
                       Approve
                     </button>
                     <button
-                      className="btn-outline text-xs px-3 py-1"
+                      className="bg-red-50 text-red-600 border border-red-100 text-[11px] font-bold px-4 py-2 rounded-xl hover:bg-red-100 transition-all"
                       disabled={busy === `reject-${doc._id}`}
                       onClick={() => withBusy(`reject-${doc._id}`, () => updateAdminDoctorStatus(doc._id, 'rejected'))}
                     >
@@ -669,41 +673,47 @@ export default function AdminPanel() {
         )}
 
         {activeView === 'doctors' && (
-        <section className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-heading text-xl">Doctor Management</h2>
-            <button type="button" className="btn-outline" onClick={exportDoctorsPdf}>Export PDF</button>
+        <section className="bg-white/70 backdrop-blur-2xl border border-white rounded-[2.5rem] p-10 shadow-2xl shadow-[#0A192F]/5">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="font-heading text-2xl font-bold text-[#0A192F]">Doctor Management</h2>
+            <button type="button" className="bg-[#0A192F] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all hover:scale-105" onClick={exportDoctorsPdf}>Export PDF</button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="text-white/60 border-b border-white/10">
+              <thead className="text-[#64748B] border-b border-[#F1F5F9]">
                 <tr>
-                  <th className="text-left py-2 pr-3">Name</th>
-                  <th className="text-left py-2 pr-3">Specialty</th>
-                  <th className="text-left py-2 pr-3">Exp.</th>
-                  <th className="text-left py-2 pr-3">Fee</th>
-                  <th className="text-left py-2 pr-3">Status</th>
-                  <th className="text-left py-2 pr-3">Actions</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Name</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Specialty</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Exp.</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Fee</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Status</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-[#F1F5F9]">
                 {doctors.map((doc) => (
-                  <tr key={doc._id} className="border-b border-white/5">
-                    <td className="py-2 pr-3">{doc.name}</td>
-                    <td className="py-2 pr-3">{doc.specialty}</td>
-                    <td className="py-2 pr-3">{doc.experience ?? 0}</td>
-                    <td className="py-2 pr-3">{doc.consultationFee ?? 0}</td>
-                    <td className="py-2 pr-3 capitalize">{doc.verificationStatus || 'pending'}</td>
-                    <td className="py-2 pr-3 space-x-3">
+                  <tr key={doc._id} className="group hover:bg-[#F8FAFC]/80 transition-colors">
+                    <td className="py-4 pr-3 font-bold text-[#0A192F]">{doc.name}</td>
+                    <td className="py-4 pr-3 text-[#64748B] font-medium">{doc.specialty}</td>
+                    <td className="py-4 pr-3 text-[#64748B] font-medium">{doc.experience ?? 0}y</td>
+                    <td className="py-4 pr-3 text-[#0A192F] font-bold">LKR {doc.consultationFee ?? 0}</td>
+                    <td className="py-4 pr-3">
+                      <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        doc.verificationStatus === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                      }`}>
+                        {doc.verificationStatus || 'pending'}
+                      </span>
+                    </td>
+                    <td className="py-4 pr-3 space-x-4">
                       <button
-                        className="text-sky-300 hover:text-sky-100"
+                        className="text-[#0A192F] font-bold hover:underline"
                         disabled={busy === `edit-doctor-${doc._id}`}
                         onClick={() => openDoctorEdit(doc)}
                       >
                         Edit
                       </button>
                       <button
-                        className="text-rose-300 hover:text-rose-100"
+                        className="text-red-500 font-bold hover:underline"
                         disabled={busy === `delete-doctor-${doc._id}`}
                         onClick={() => {
                           if (window.confirm('Delete this doctor profile?')) {
@@ -723,41 +733,51 @@ export default function AdminPanel() {
         )}
 
         {activeView === 'patients' && (
-        <section className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-heading text-xl">Patient Management</h2>
-            <button type="button" className="btn-outline" onClick={exportPatientsPdf}>Export PDF</button>
+        <section className="bg-white/70 backdrop-blur-2xl border border-white rounded-[2.5rem] p-10 shadow-2xl shadow-[#0A192F]/5">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="font-heading text-2xl font-bold text-[#0A192F]">Patient Management</h2>
+            <button type="button" className="bg-[#0A192F] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all hover:scale-105" onClick={exportPatientsPdf}>Export PDF</button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="text-white/60 border-b border-white/10">
+              <thead className="text-[#64748B] border-b border-[#F1F5F9]">
                 <tr>
-                  <th className="text-left py-2 pr-3">Name</th>
-                  <th className="text-left py-2 pr-3">Email</th>
-                  <th className="text-left py-2 pr-3">Phone</th>
-                  <th className="text-left py-2 pr-3">Active</th>
-                  <th className="text-left py-2 pr-3">Actions</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Name</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Email</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Phone</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Active</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-[#F1F5F9]">
                 {patients.map((p) => (
-                  <tr key={p._id} className="border-b border-white/5">
-                    <td className="py-2 pr-3">{p.name}</td>
-                    <td className="py-2 pr-3">{p.email}</td>
-                    <td className="py-2 pr-3">{p.phone || '-'}</td>
-                    <td className="py-2 pr-3">{p.isActive ? 'Yes' : 'No'}</td>
-                    <td className="py-2 pr-3 space-x-3">
+                  <tr key={p._id} className="group hover:bg-[#F8FAFC]/80 transition-colors">
+                    <td className="py-4 pr-3 font-bold text-[#0A192F]">{p.name}</td>
+                    <td className="py-4 pr-3 text-[#64748B] font-medium">{p.email}</td>
+                    <td className="py-4 pr-3 text-[#64748B] font-medium">{p.phone || '-'}</td>
+                    <td className="py-4 pr-3">
+                      <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-bold tracking-wider ${
+                        p.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
+                      }`}>
+                        {p.isActive ? 'ACTIVE' : 'BLOCKED'}
+                      </span>
+                    </td>
+                    <td className="py-4 pr-3 space-x-4">
                       <button
-                        className="text-sky-300 hover:text-sky-100"
+                        className="text-[#0A192F] font-bold hover:underline"
                         disabled={busy === `edit-patient-${p.userId}`}
                         onClick={() => openPatientEdit(p)}
                       >
                         Edit
                       </button>
                       <button
-                        className="text-red-300 hover:text-red-100"
+                        className="text-red-500 font-bold hover:underline"
                         disabled={busy === `delete-patient-${p.userId}`}
-                        onClick={() => withBusy(`delete-patient-${p.userId}`, () => deletePatientByAdmin(p.userId))}
+                        onClick={() => {
+                          if (window.confirm('Delete this patient?')) {
+                            withBusy(`delete-patient-${p.userId}`, () => deletePatientByAdmin(p.userId));
+                          }
+                        }}
                       >
                         Delete
                       </button>
@@ -771,66 +791,58 @@ export default function AdminPanel() {
         )}
 
         {activeView === 'appointments' && (
-        <section className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-heading text-xl">Appointment Management</h2>
-            <button type="button" className="btn-outline" onClick={exportAppointmentsPdf}>Export PDF</button>
+        <section className="bg-white/70 backdrop-blur-2xl border border-white rounded-[2.5rem] p-10 shadow-2xl shadow-[#0A192F]/5">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="font-heading text-2xl font-bold text-[#0A192F]">Appointment Management</h2>
+            <button type="button" className="bg-[#0A192F] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all hover:scale-105" onClick={exportAppointmentsPdf}>Export PDF</button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="text-white/60 border-b border-white/10">
+              <thead className="text-[#64748B] border-b border-[#F1F5F9]">
                 <tr>
-                  <th className="text-left py-2 pr-3">Date/Time</th>
-                  <th className="text-left py-2 pr-3">Doctor</th>
-                  <th className="text-left py-2 pr-3">Patient</th>
-                  <th className="text-left py-2 pr-3">Status</th>
-                  <th className="text-left py-2 pr-3">Actions</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Date/Time</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Doctor</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Patient</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Status</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-[#F1F5F9]">
                 {sortedAppointments.length === 0 && (
                   <tr>
-                    <td className="py-3 text-white/50" colSpan={5}>No appointments found.</td>
+                    <td className="py-8 text-[#64748B] font-medium italic text-center" colSpan={5}>No appointments found in the system.</td>
                   </tr>
                 )}
                 {sortedAppointments.map((item) => (
-                  <tr key={item._id} className="border-b border-white/5">
-                    <td className="py-2 pr-3">
-                      <div className="font-medium text-white">{new Date(item.date).toLocaleDateString()}</div>
-                      <div className="text-xs text-white/40">{item.time}</div>
+                  <tr key={item._id} className="group hover:bg-[#F8FAFC]/80 transition-colors">
+                    <td className="py-4 pr-3">
+                      <div className="font-bold text-[#0A192F]">{new Date(item.date).toLocaleDateString()}</div>
+                      <div className="text-xs text-[#64748B] font-medium">{item.time}</div>
                     </td>
-                    <td className="py-2 pr-3">
-                      <div className="font-medium">{doctorNameMap.get(String(item.doctorId)) || "Doctor"}</div>
-                      <div className="text-[10px] text-white/30 truncate max-w-[100px]">{item.doctorId}</div>
-                    </td>
-                    <td className="py-2 pr-3">
-                      <div className="font-medium">{patientNameMap.get(String(item.patientId)) || "Patient"}</div>
-                      <div className="text-[10px] text-white/30 truncate max-w-[100px]">{item.patientId}</div>
-                    </td>
-                    <td className="py-2 pr-3">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        item.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-400' :
-                        item.status === 'cancelled' ? 'bg-rose-500/20 text-rose-400' :
-                        item.status === 'completed' ? 'bg-sky-500/20 text-sky-400' :
-                        'bg-amber-500/20 text-amber-400'
+                    <td className="py-4 pr-3 text-[#64748B] font-medium">{doctorNameMap.get(String(item.doctorId)) || item.doctorId || '-'}</td>
+                    <td className="py-4 pr-3 text-[#64748B] font-medium">{patientNameMap.get(String(item.patientId)) || item.patientId || '-'}</td>
+                    <td className="py-4 pr-3">
+                      <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        item.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600' :
+                        item.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
                       }`}>
-                        {item.status}
+                        {item.status || '-'}
                       </span>
                     </td>
-                    <td className="py-2 pr-3 space-x-3">
+                    <td className="py-4 pr-3 space-x-4">
                       <button
-                        className="text-sky-300 hover:text-sky-100"
-                        disabled={busy === `edit-appointment-${item._id}`}
+                        className="text-[#0A192F] font-bold hover:underline"
+                        disabled={busy === `edit-appt-${item._id}`}
                         onClick={() => openAppointmentEdit(item)}
                       >
                         Edit
                       </button>
                       <button
-                        className="text-red-300 hover:text-red-100"
-                        disabled={busy === `delete-appointment-${item._id}`}
+                        className="text-red-500 font-bold hover:underline"
+                        disabled={busy === `delete-appt-${item._id}`}
                         onClick={() => {
                           if (window.confirm('Delete this appointment?')) {
-                            withBusy(`delete-appointment-${item._id}`, () => deleteAppointmentByAdmin(item._id));
+                            withBusy(`delete-appt-${item._id}`, () => deleteAppointmentByAdmin(item._id));
                           }
                         }}
                       >
@@ -844,57 +856,49 @@ export default function AdminPanel() {
           </div>
         </section>
         )}
-
         {activeView === 'payments' && (
-        <section className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-heading text-xl">Payment Management</h2>
-            <button type="button" className="btn-outline" onClick={exportPaymentsPdf}>Export PDF</button>
+        <section className="bg-white/70 backdrop-blur-2xl border border-white rounded-[2.5rem] p-10 shadow-2xl shadow-[#0A192F]/5">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="font-heading text-2xl font-bold text-[#0A192F]">Payment Management</h2>
+            <button type="button" className="bg-[#0A192F] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all hover:scale-105" onClick={exportPaymentsPdf}>Export PDF</button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="text-white/60 border-b border-white/10">
+              <thead className="text-[#64748B] border-b border-[#F1F5F9]">
                 <tr>
-                  <th className="text-left py-2 pr-3">Transaction</th>
-                  <th className="text-left py-2 pr-3">Patient</th>
-                  <th className="text-left py-2 pr-3">Appointment</th>
-                  <th className="text-left py-2 pr-3">Amount</th>
-                  <th className="text-left py-2 pr-3">Status</th>
-                  <th className="text-left py-2 pr-3">Actions</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Transaction</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Patient</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Appointment</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Amount</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Status</th>
+                  <th className="text-left font-bold py-4 pr-3 uppercase tracking-wider text-[11px]">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-[#F1F5F9]">
                 {payments.length === 0 && (
                   <tr>
-                    <td className="py-3 text-white/50" colSpan={6}>No transactions found.</td>
+                    <td className="py-8 text-[#64748B] font-medium italic text-center" colSpan={6}>No transactions found in records.</td>
                   </tr>
                 )}
                 {payments.map((item) => (
-                  <tr key={item._id} className="border-b border-white/5">
-                    <td className="py-2 pr-3">{item.transactionId || 'N/A'}</td>
-                    <td className="py-2 pr-3">{patientNameMap.get(String(item.patientId)) || item.patientId}</td>
-                    <td className="py-2 pr-3">{appointmentLabelMap.get(String(item.appointmentId)) || item.appointmentId}</td>
-                    <td className="py-2 pr-3">${item.amount} ({item.method})</td>
-                    <td className="py-2 pr-3 capitalize">{item.status}</td>
-                    <td className="py-2 pr-3 space-x-3">
-                      <button
-                        className="text-sky-300 hover:text-sky-100"
-                        disabled={busy === `edit-payment-${item._id}`}
-                        onClick={() => openPaymentEdit(item)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="text-red-300 hover:text-red-100"
-                        disabled={busy === `delete-payment-${item._id}`}
-                        onClick={() => {
-                          if (window.confirm('Delete this payment record?')) {
-                            withBusy(`delete-payment-${item._id}`, () => deletePaymentByAdmin(item._id));
-                          }
-                        }}
-                      >
-                        Delete
-                      </button>
+                  <tr key={item._id} className="group hover:bg-[#F8FAFC]/80 transition-colors">
+                    <td className="py-4 pr-3 font-bold text-[#0A192F]">{item.transactionId || 'N/A'}</td>
+                    <td className="py-4 pr-3 text-[#64748B] font-medium">{patientNameMap.get(String(item.patientId)) || item.patientId}</td>
+                    <td className="py-4 pr-3 text-[#64748B] font-medium max-w-[200px] truncate">{appointmentLabelMap.get(String(item.appointmentId)) || item.appointmentId}</td>
+                    <td className="py-4 pr-3 text-[#0A192F] font-bold">LKR {item.amount}</td>
+                    <td className="py-4 pr-3">
+                      <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        item.status === 'success' ? 'bg-emerald-50 text-emerald-600' :
+                        item.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
+                      }`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="py-4 pr-3 space-x-4">
+                      <button className="text-[#0A192F] font-bold hover:underline" onClick={() => openPaymentEdit(item)}>Edit</button>
+                      <button className="text-red-500 font-bold hover:underline" onClick={() => {
+                        if (window.confirm('Delete payment record?')) withBusy(`del-pay-${item._id}`, () => deletePaymentByAdmin(item._id));
+                      }}>Delete</button>
                     </td>
                   </tr>
                 ))}
@@ -905,282 +909,131 @@ export default function AdminPanel() {
         )}
 
         {activeView === 'notifications' && (
-        <section className="card max-w-2xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
+        <section className="bg-white/70 backdrop-blur-2xl border border-white rounded-[2.5rem] p-10 shadow-2xl shadow-[#0A192F]/5 max-w-2xl mx-auto">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 rounded-2xl bg-[#0A192F]/5 flex items-center justify-center text-[#0A192F]">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
             </div>
             <div>
-              <h2 className="font-heading text-xl">Send Patient Notifications</h2>
-              <p className="text-sm text-white/50">Notify patients about doctor arrivals or updates.</p>
+              <h2 className="font-heading text-2xl font-bold text-[#0A192F]">Patient Notifications</h2>
+              <p className="text-sm text-[#64748B] font-medium">Broadcast alerts or updates to your patients.</p>
             </div>
           </div>
 
-          <form onSubmit={handleSendNotification} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <form onSubmit={handleSendNotification} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <label className="text-xs font-medium text-white/60 ml-1">Select Doctor</label>
-                <select
-                  className="form-input"
-                  value={notificationForm.doctorId}
-                  onChange={(e) => setNotificationForm(prev => ({ ...prev, doctorId: e.target.value }))}
-                  required
-                >
+                <label className="block text-[11px] font-bold text-[#0A192F] uppercase tracking-wider ml-1">Select Doctor</label>
+                <select className="w-full px-5 py-4 bg-white/50 border border-[#D9E2EC] rounded-2xl text-sm text-[#0A192F] focus:outline-none focus:border-[#0A192F] focus:ring-4 focus:ring-[#0A192F]/5 transition-all" value={notificationForm.doctorId} onChange={(e) => setNotificationForm(prev => ({ ...prev, doctorId: e.target.value }))} required>
                   <option value="">Choose a doctor...</option>
-                  {doctors.map(doc => (
-                    <option key={doc._id} value={doc._id}>{doc.name} ({doc.specialty})</option>
-                  ))}
+                  {doctors.map(doc => (<option key={doc._id} value={doc._id}>{doc.name} ({doc.specialty})</option>))}
                 </select>
               </div>
-
               <div className="space-y-2">
-                <label className="text-xs font-medium text-white/60 ml-1">Notification Method</label>
-                <div className="form-input bg-white/5 border-white/5 text-white/40 flex items-center gap-2">
-                  <span className="text-primary">●</span> Patient Dashboard Profile
+                <label className="block text-[11px] font-bold text-[#0A192F] uppercase tracking-wider ml-1">Channel</label>
+                <div className="w-full px-5 py-4 bg-[#F8FAFC] border border-[#D9E2EC] rounded-2xl text-sm text-[#64748B] font-bold flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#0A192F]"></span> Patient Dashboard
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-white/60 ml-1">Recipient Selection</label>
-              <div className="flex gap-4 p-3 bg-bg-surface2/50 rounded-xl border border-white/5">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="target"
-                    className="accent-primary"
-                    checked={notificationForm.target === 'all'}
-                    onChange={() => setNotificationForm(prev => ({ ...prev, target: 'all', patientId: '' }))}
-                  />
-                  <span className="text-sm text-white/80">All Patients of Doctor</span>
+            <div className="space-y-3">
+              <label className="block text-[11px] font-bold text-[#0A192F] uppercase tracking-wider ml-1">Recipients</label>
+              <div className="flex gap-6 p-5 bg-[#F8FAFC] border border-[#D9E2EC] rounded-2xl">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input type="radio" name="target" className="w-4 h-4 accent-[#0A192F]" checked={notificationForm.target === 'all'} onChange={() => setNotificationForm(prev => ({ ...prev, target: 'all', patientId: '' }))} />
+                  <span className="text-sm font-bold text-[#64748B] group-hover:text-[#0A192F] transition-colors">All Doctor Patients</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="target"
-                    className="accent-primary"
-                    checked={notificationForm.target === 'single'}
-                    onChange={() => setNotificationForm(prev => ({ ...prev, target: 'single' }))}
-                  />
-                  <span className="text-sm text-white/80">Specific Patient</span>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input type="radio" name="target" className="w-4 h-4 accent-[#0A192F]" checked={notificationForm.target === 'single'} onChange={() => setNotificationForm(prev => ({ ...prev, target: 'single' }))} />
+                  <span className="text-sm font-bold text-[#64748B] group-hover:text-[#0A192F] transition-colors">Specific Patient</span>
                 </label>
               </div>
             </div>
 
             {notificationForm.target === 'single' && (
-              <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                <label className="text-xs font-medium text-white/60 ml-1">Select Patient</label>
-                <select
-                  className="form-input"
-                  value={notificationForm.patientId}
-                  onChange={(e) => setNotificationForm(prev => ({ ...prev, patientId: e.target.value }))}
-                  required={notificationForm.target === 'single'}
-                >
-                  <option value="">Choose a patient...</option>
-                  {patients.map(p => (
-                    <option key={p.userId || p._id} value={p.userId || p._id}>{p.name} ({p.email})</option>
-                  ))}
+              <div className="space-y-2 animate-fade-up">
+                <label className="block text-[11px] font-bold text-[#0A192F] uppercase tracking-wider ml-1">Select Patient</label>
+                <select className="w-full px-5 py-4 bg-white/50 border border-[#D9E2EC] rounded-2xl text-sm text-[#0A192F] focus:outline-none focus:border-[#0A192F] focus:ring-4 focus:ring-[#0A192F]/5 transition-all" value={notificationForm.patientId} onChange={(e) => setNotificationForm(prev => ({ ...prev, patientId: e.target.value }))} required={notificationForm.target === 'single'}>
+                  <option value="">Select patient...</option>
+                  {patients.map(p => (<option key={p.userId || p._id} value={p.userId || p._id}>{p.name} ({p.email})</option>))}
                 </select>
               </div>
             )}
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-white/60 ml-1">Message Content</label>
-              <textarea
-                className="form-input min-h-[120px] resize-none py-3"
-                placeholder="Type your message here (e.g. Dr. Smith has arrived and is ready for appointments...)"
-                value={notificationForm.message}
-                onChange={(e) => setNotificationForm(prev => ({ ...prev, message: e.target.value }))}
-                required
-              />
+              <label className="block text-[11px] font-bold text-[#0A192F] uppercase tracking-wider ml-1">Announcement Message</label>
+              <textarea className="w-full px-5 py-4 bg-white/50 border border-[#D9E2EC] rounded-2xl text-sm text-[#0A192F] placeholder-[#94A3B8] focus:outline-none focus:border-[#0A192F] focus:ring-4 focus:ring-[#0A192F]/5 transition-all min-h-[120px] resize-none" placeholder="Enter notification message..." value={notificationForm.message} onChange={(e) => setNotificationForm(prev => ({ ...prev, message: e.target.value }))} required />
             </div>
 
-            <button
-              type="submit"
-              disabled={busy === 'send-notification'}
-              className="btn-primary w-full justify-center py-3 text-base shadow-lg shadow-primary/20"
-            >
-              {busy === 'send-notification' ? 'Sending...' : 'Send Notification'}
+            <button type="submit" disabled={busy === 'send-notification'} className="w-full py-4 bg-[#0A192F] text-white font-bold rounded-2xl shadow-xl shadow-[#0A192F]/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
+              {busy === 'send-notification' ? 'Processing...' : 'Broadcast Message'}
             </button>
           </form>
         </section>
         )}
 
         {editModal.open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-            <div className="w-full max-w-2xl card">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-heading text-xl">{editModal.title}</h2>
-                <button type="button" className="text-white/60 hover:text-white" onClick={closeEditModal}>
-                  Close
-                </button>
-              </div>
-
-              <form onSubmit={submitEditModal} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0A192F]/40 backdrop-blur-md px-4 overflow-y-auto pt-20 pb-10">
+            <div className="w-full max-w-2xl bg-white rounded-[2.5rem] p-10 shadow-2xl relative animate-fade-up border border-white">
+              <button type="button" className="absolute top-8 right-8 text-[#64748B] hover:text-[#0A192F] font-bold uppercase text-[10px] tracking-widest" onClick={closeEditModal}>Close [x]</button>
+              
+              <h2 className="font-heading text-3xl font-bold text-[#0A192F] mb-8">{editModal.title}</h2>
+              
+              <form onSubmit={submitEditModal} className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {editModal.type === 'doctor' && (
                   <>
-                    <label className="block">
-                      <span className="form-label">Doctor Name</span>
-                      <input
-                        className="form-input"
-                        value={editModal.fields.name || ''}
-                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, name: e.target.value } }))}
-                        placeholder="Doctor name"
-                        required
-                      />
-                    </label>
-                    <label className="block">
-                      <span className="form-label">Specialty</span>
-                      <input
-                        className="form-input"
-                        value={editModal.fields.specialty || ''}
-                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, specialty: e.target.value } }))}
-                        placeholder="Specialty"
-                        required
-                      />
-                    </label>
-                    <label className="block">
-                      <span className="form-label">Phone</span>
-                      <input
-                        className="form-input"
-                        value={editModal.fields.phone || ''}
-                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, phone: e.target.value } }))}
-                        placeholder="Phone"
-                      />
-                    </label>
-                    <label className="block">
-                      <span className="form-label">Experience (Years)</span>
-                      <input
-                        className="form-input"
-                        type="number"
-                        min="0"
-                        value={editModal.fields.experience || ''}
-                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, experience: e.target.value } }))}
-                        placeholder="Experience (years)"
-                      />
-                    </label>
-                    <label className="block md:col-span-2">
-                      <span className="form-label">Consultation Fee</span>
-                      <input
-                        className="form-input"
-                        type="number"
-                        min="0"
-                        value={editModal.fields.consultationFee || ''}
-                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, consultationFee: e.target.value } }))}
-                        placeholder="Consultation fee"
-                      />
-                    </label>
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-[#0A192F] uppercase tracking-wider ml-1">Name</label>
+                      <input className="w-full px-5 py-4 bg-[#F8FAFC] border border-[#D9E2EC] rounded-2xl text-sm" value={editModal.fields.name || ''} onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, name: e.target.value } }))} required />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-[#0A192F] uppercase tracking-wider ml-1">Specialty</label>
+                      <input className="w-full px-5 py-4 bg-[#F8FAFC] border border-[#D9E2EC] rounded-2xl text-sm" value={editModal.fields.specialty || ''} onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, specialty: e.target.value } }))} required />
+                    </div>
                   </>
                 )}
-
                 {editModal.type === 'patient' && (
                   <>
-                    <input
-                      className="form-input"
-                      value={editModal.fields.name || ''}
-                      onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, name: e.target.value } }))}
-                      placeholder="Patient name"
-                      required
-                    />
-                    <input
-                      className="form-input"
-                      type="email"
-                      value={editModal.fields.email || ''}
-                      onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, email: e.target.value } }))}
-                      placeholder="Patient email"
-                      required
-                    />
-                    <input
-                      className="form-input md:col-span-2"
-                      value={editModal.fields.phone || ''}
-                      onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, phone: e.target.value } }))}
-                      placeholder="Phone"
-                    />
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-[#0A192F] uppercase tracking-wider ml-1">Name</label>
+                      <input className="w-full px-5 py-4 bg-[#F8FAFC] border border-[#D9E2EC] rounded-2xl text-sm" value={editModal.fields.name || ''} onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, name: e.target.value } }))} required />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-[#0A192F] uppercase tracking-wider ml-1">Email</label>
+                      <input className="w-full px-5 py-4 bg-[#F8FAFC] border border-[#D9E2EC] rounded-2xl text-sm" value={editModal.fields.email || ''} onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, email: e.target.value } }))} required />
+                    </div>
                   </>
                 )}
-
                 {editModal.type === 'appointment' && (
-                  <>
-                    <label className="block">
-                      <span className="form-label">Date</span>
-                      <input
-                        className="form-input"
-                        type="date"
-                        value={editModal.fields.date || ''}
-                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, date: e.target.value } }))}
-                        required
-                      />
-                    </label>
-                    <label className="block">
-                      <span className="form-label">Time</span>
-                      <input
-                        className="form-input"
-                        value={editModal.fields.time || ''}
-                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, time: e.target.value } }))}
-                        placeholder="e.g. 10:00 or 10:00-11:00"
-                        required
-                      />
-                    </label>
-                    <label className="block md:col-span-2">
-                      <span className="form-label">Status</span>
-                      <select
-                        className="form-input"
-                        value={editModal.fields.status || 'pending'}
-                        onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, status: e.target.value } }))}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
+                  <div className="md:col-span-2 grid grid-cols-2 gap-5">
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-[#0A192F] uppercase tracking-wider ml-1">Status</label>
+                      <select className="w-full px-5 py-4 bg-[#F8FAFC] border border-[#D9E2EC] rounded-2xl text-sm" value={editModal.fields.status || 'pending'} onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, status: e.target.value } }))}>
+                        <option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
                       </select>
-                    </label>
-                  </>
+                    </div>
+                  </div>
                 )}
-
-                {editModal.type === 'payment' && (
-                  <>
-                    <input
-                      className="form-input"
-                      type="number"
-                      min="0"
-                      value={editModal.fields.amount || ''}
-                      onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, amount: e.target.value } }))}
-                      placeholder="Amount"
-                      required
-                    />
-                    <select
-                      className="form-input"
-                      value={editModal.fields.status || 'pending'}
-                      onChange={(e) => setEditModal((prev) => ({ ...prev, fields: { ...prev.fields, status: e.target.value } }))}
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="success">Success</option>
-                      <option value="failed">Failed</option>
-                      <option value="refunded">Refunded</option>
-                    </select>
-                  </>
-                )}
-
-                <button type="submit" disabled={!!busy} className="btn-primary md:col-span-2 justify-center">
-                  Save Changes
+                
+                <button type="submit" disabled={!!busy} className="w-full py-4 bg-[#0A192F] text-white font-bold rounded-2xl mt-4 md:col-span-2 shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
+                  Apply Updates
                 </button>
               </form>
-            </div>
           </div>
-        )}
         </div>
+      )}
       </div>
-    </main>
+    </div>
+  </main>
   );
 }
 
 function StatCard({ label, value }) {
   return (
-    <div className="card text-center">
-      <p className="text-sm text-white/50">{label}</p>
-      <p className="text-3xl font-heading font-bold mt-1">{value}</p>
+    <div className="bg-white/70 backdrop-blur-2xl border border-white p-6 rounded-3xl shadow-xl shadow-[#0A192F]/5 transition-all hover:scale-[1.02]">
+      <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-widest mb-1">{label}</p>
+      <p className="text-3xl font-heading font-extrabold text-[#0A192F]">{value}</p>
     </div>
   );
 }

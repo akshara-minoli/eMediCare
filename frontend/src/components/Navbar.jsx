@@ -12,24 +12,22 @@ export default function Navbar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-[72px] bg-bg/85 backdrop-blur-xl border-b border-white/[0.07]">
-      <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between gap-6">
+    <header className="fixed top-0 left-0 right-0 z-50 h-[72px] bg-[#0A192F]/95 backdrop-blur-md border-b border-white/10 shadow-lg">
+      <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between gap-6">
 
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 font-heading font-extrabold text-xl text-gradient">
-          <span className="text-2xl">⚕</span>
+        <Link to="/" className="flex items-center gap-2.5 font-heading font-extrabold text-xl text-[#F8FAFC] tracking-tight">
           eMediCare
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-2">
           <NavLink
             to="/"
             className={({ isActive }) =>
-              `px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                isActive
-                  ? 'text-primary bg-primary/10'
-                  : 'text-white/60 hover:text-white hover:bg-white/5'
+              `px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-300 ${isActive
+                ? 'text-white bg-[#112240]'
+                : 'text-white/60 hover:text-white'
               }`
             }
           >
@@ -38,24 +36,34 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => scrollToSection('about-section')}
-            className="px-4 py-1.5 rounded-full text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
+            className="px-4 py-1.5 rounded-full text-sm font-medium text-white/60 hover:text-white transition-all duration-300"
           >
             About
           </button>
           <button
             type="button"
             onClick={() => scrollToSection('contact-section')}
-            className="px-4 py-1.5 rounded-full text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
+            className="px-4 py-1.5 rounded-full text-sm font-medium text-white/60 hover:text-white transition-all duration-300"
           >
             Contact
           </button>
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-2">
-          <Link to="/login" className="btn-ghost text-sm">Sign In</Link>
-          <Link to="/register" className="btn-primary text-sm px-4 py-2">Get Started</Link>
-          </div>
+        <div className="hidden md:flex items-center gap-3">
+          <Link 
+            to="/login" 
+            className="px-5 py-2 border border-white/20 rounded-xl text-sm font-bold text-[#F8FAFC] hover:bg-white hover:text-[#0A192F] transition-all duration-300"
+          >
+            Sign In
+          </Link>
+          <Link 
+            to="/register" 
+            className="px-5 py-2 bg-[#F8FAFC] rounded-xl text-sm font-bold text-[#0A192F] shadow-lg shadow-black/20 hover:scale-105 transition-all duration-300"
+          >
+            Get Started
+          </Link>
+        </div>
 
         {/* Hamburger */}
         <button
@@ -63,39 +71,39 @@ export default function Navbar() {
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle menu"
         >
-          <span className={`block w-5 h-0.5 bg-white rounded transition-all duration-300 ${menuOpen ? 'translate-y-[7px] rotate-45' : ''}`} />
-          <span className={`block w-5 h-0.5 bg-white rounded transition-all duration-300 ${menuOpen ? 'opacity-0' : ''}`} />
-          <span className={`block w-5 h-0.5 bg-white rounded transition-all duration-300 ${menuOpen ? '-translate-y-[7px] -rotate-45' : ''}`} />
+          <span className={`block w-5 h-0.5 bg-[#F8FAFC] rounded transition-all duration-300 ${menuOpen ? 'translate-y-[7px] rotate-45' : ''}`} />
+          <span className={`block w-5 h-0.5 bg-[#F8FAFC] rounded transition-all duration-300 ${menuOpen ? 'opacity-0' : ''}`} />
+          <span className={`block w-5 h-0.5 bg-[#F8FAFC] rounded transition-all duration-300 ${menuOpen ? '-translate-y-[7px] -rotate-45' : ''}`} />
         </button>
       </div>
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="md:hidden flex flex-col gap-1 px-6 py-4 bg-bg-2 border-t border-white/[0.07] animate-fade-up">
+        <div className="md:hidden flex flex-col gap-1 px-6 py-4 bg-[#0A192F] border-t border-white/10 animate-fade-up">
           <NavLink
             to="/"
             onClick={() => setMenuOpen(false)}
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all"
+            className="px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white transition-all"
           >
             Home
           </NavLink>
           <button
             type="button"
             onClick={() => scrollToSection('about-section')}
-            className="text-left px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all"
+            className="text-left px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white transition-all"
           >
             About
           </button>
           <button
             type="button"
             onClick={() => scrollToSection('contact-section')}
-            className="text-left px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all"
+            className="text-left px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white transition-all"
           >
             Contact
           </button>
-          <div className="pt-2 border-t border-white/[0.07] flex flex-col gap-2 mt-1">
-            <Link to="/login" onClick={() => setMenuOpen(false)} className="btn-ghost text-sm justify-center">Sign In</Link>
-            <Link to="/register" onClick={() => setMenuOpen(false)} className="btn-primary text-sm justify-center">Get Started</Link>
+          <div className="pt-2 border-t border-white/10 flex flex-col gap-2 mt-1">
+            <Link to="/login" onClick={() => setMenuOpen(false)} className="w-full py-3 text-center border border-white/20 rounded-xl text-sm font-bold text-[#F8FAFC]">Sign In</Link>
+            <Link to="/register" onClick={() => setMenuOpen(false)} className="w-full py-3 text-center bg-[#22C55E] rounded-xl text-sm font-bold text-[#0A192F]">Get Started</Link>
           </div>
         </div>
       )}

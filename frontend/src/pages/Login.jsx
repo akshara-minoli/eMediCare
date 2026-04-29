@@ -48,34 +48,39 @@ export default function Login() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-hero flex items-center justify-center px-4">
-      {/* Glow */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+    <main className="h-screen bg-[#F8FAFC] flex items-center justify-center px-4 overflow-hidden relative">
+      {/* Background purely aesthetic glow */}
+      <div className="absolute top-1/4 right-0 w-96 h-96 bg-[#0A192F]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 left-0 w-96 h-96 bg-[#0A192F]/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10 animate-fade-up">
-        <div className="glass rounded-2xl p-8">
-          <Link to="/" className="inline-flex mb-6 text-sm text-primary hover:underline font-medium">
-            Back to Home
-          </Link>
+        {/* Back Link */}
+        <Link to="/" className="inline-flex items-center gap-2 mb-6 text-sm text-[#0A192F]/60 hover:text-[#0A192F] font-bold transition-colors">
+          ← Back to Home
+        </Link>
 
+        <div className="bg-white/70 backdrop-blur-2xl border border-white rounded-[2.5rem] p-10 shadow-2xl shadow-[#0A192F]/10">
           {/* Header */}
           <div className="text-center mb-8">
-            <span className="text-4xl">⚕</span>
-            <h1 className="text-2xl font-heading font-bold mt-2">Welcome back</h1>
-            <p className="text-white/50 text-sm mt-1">Sign in to your eMediCare account</p>
+            <h1 className="text-3xl font-heading font-extrabold text-[#0A192F]">Welcome back</h1>
+            <p className="text-[#64748B] text-sm mt-2 font-medium">Log in to your eMediCare account</p>
           </div>
 
-          {error && <div className="alert-error mb-5">{error}</div>}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-xs text-red-600 font-medium">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="form-label">Email address</label>
+              <label className="block text-[11px] font-bold text-[#0A192F] uppercase tracking-wider mb-2 ml-1">Email Address</label>
               <input
                 id="login-email"
                 type="email"
                 name="email"
                 placeholder="you@example.com"
-                className="form-input"
+                className="w-full px-5 py-4 bg-white/50 border border-[#D9E2EC] rounded-2xl text-sm text-[#0A192F] placeholder-[#94A3B8] focus:outline-none focus:border-[#0A192F] focus:ring-4 focus:ring-[#0A192F]/5 transition-all"
                 value={form.email}
                 onChange={handleChange}
                 required
@@ -83,14 +88,17 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="form-label">Password</label>
+              <div className="flex items-center justify-between mb-2 ml-1">
+                <label className="block text-[11px] font-bold text-[#0A192F] uppercase tracking-wider">Password</label>
+                <Link to="/forgot-password" className="text-[11px] font-bold text-[#0A192F] hover:underline">Forgot?</Link>
+              </div>
               <div className="relative">
                 <input
                   id="login-password"
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   placeholder="••••••••"
-                  className="form-input pr-20"
+                  className="w-full px-5 py-4 bg-white/50 border border-[#D9E2EC] rounded-2xl text-sm text-[#0A192F] placeholder-[#94A3B8] focus:outline-none focus:border-[#0A192F] focus:ring-4 focus:ring-[#0A192F]/5 transition-all pr-20"
                   value={form.password}
                   onChange={handleChange}
                   required
@@ -98,7 +106,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/60 hover:text-white transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[#64748B] hover:text-[#0A192F] uppercase tracking-widest transition-colors"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -109,18 +117,15 @@ export default function Login() {
               id="login-submit"
               type="submit"
               disabled={loading}
-              className="btn-primary w-full justify-center py-3 text-base disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full py-4 bg-[#0A192F] text-white font-bold rounded-2xl shadow-xl shadow-[#0A192F]/20 hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Please wait...' : 'Sign In'}
             </button>
-            <div className="text-right">
-              <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot password?</Link>
-            </div>
           </form>
 
-          <p className="text-center text-sm text-white/40 mt-6">
+          <p className="text-center text-sm text-[#64748B] mt-8 font-medium">
             Don't have an account?{' '}
-            <Link to="/register" className="text-primary hover:underline font-medium">Register here</Link>
+            <Link to="/register" className="text-[#0A192F] hover:underline font-bold">Register here</Link>
           </p>
         </div>
       </div>
