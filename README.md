@@ -1,3 +1,6 @@
+Microservices Healthcare Platform
+Microservices • Docker • Kubernetes • Node.js • MongoDB
+
 <h1 align="center">
   <img src="https://img.shields.io/badge/eMediCare-AI%20Healthcare%20Platform-blue?style=for-the-badge&logo=react" alt="eMediCare" />
 </h1>
