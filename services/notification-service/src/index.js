@@ -1,3 +1,5 @@
+// MongoDB's driver expects global Web Crypto, which Node 18 does not expose by default.
+globalThis.crypto ??= require('node:crypto').webcrypto;
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
